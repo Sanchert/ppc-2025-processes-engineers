@@ -51,7 +51,7 @@ bool KolotukhinAElemVecSumMPI::RunImpl() {
 
   MPI_Bcast(sizes.data(), pCount, MPI_INT, 0, MPI_COMM_WORLD);
   MPI_Bcast(startingPoints.data(), pCount, MPI_INT, 0, MPI_COMM_WORLD);
-
+  
   int partSize = sizes[pid];
   std::vector<int> local_data(partSize);
 
