@@ -26,51 +26,28 @@ bool KolotukhinAElemVecSumMPI::PreProcessingImpl() {
 }
 
 bool KolotukhinAElemVecSumMPI::RunImpl() {
-  const std::vector<int> &inputVec = GetInput();
-
   int pid;
   int pCount;
   MPI_Comm_rank(MPI_COMM_WORLD, &pid);
   MPI_Comm_size(MPI_COMM_WORLD, &pCount);
-
-  int elemsCount = inputVec.size();
-
-  std::vector<int> sizes(pCount);
-  std::vector<int> startingPoints(pCount);
-
-  if (pid == 0) {
-    int baseSize = elemsCount / pCount;
-    int remainder = elemsCount % pCount;
-    int step = 0;
-    for (int pRank = 0; pRank < pCount; pRank++) {
-      sizes[pRank] = baseSize + (pRank < remainder ? 1 : 0);
-      startingPoints[pRank] = step;
-      step += sizes[pRank];
-    }
-  }
-
-  MPI_Bcast(sizes.data(), pCount, MPI_INT, 0, MPI_COMM_WORLD);
-  MPI_Bcast(startingPoints.data(), pCount, MPI_INT, 0, MPI_COMM_WORLD);
   
-  int partSize = sizes[pid];
-  std::vector<int> local_data(partSize);
-
-  MPI_Scatterv(inputVec.data(), sizes.data(), startingPoints.data(), MPI_INT, local_data.data(), partSize, MPI_INT, 0,
-               MPI_COMM_WORLD);
-
-  int local_sum = std::accumulate(local_data.begin(), local_data.end(), 0);
-  int global_sum = 0;
-  MPI_Reduce(&local_sum, &global_sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
-  int sum = 0;
-  if (pid == 0) {
-    sum = global_sum;
+  const std::vector<int> &inputVec = GetInput();
+  int vectorSize = inputVec.size();
+  int minPart = vectorSize / pCount;
+  int procSize = minPart + (pid < vectorSize % pCount ? 1 : 0);
+  
+  int local_sum = 0;
+  size_t start = minPart * pid + (pid < vectorSize % pCount ? pid : vectorSize % pCount);
+  size_t end = start + procSize;
+  for (size_t i = start; i < end && i < inputVec.size(); i++) {
+    local_sum += inputVec[i];
   }
+  int global_sum;
 
-  MPI_Bcast(&sum, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-  GetOutput() = sum;
-
+  MPI_Reduce(&local_sum, &global_sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&global_sum, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  
+  GetOutput() = global_sum;
   return true;
 }
 
