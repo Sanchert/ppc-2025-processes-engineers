@@ -24,8 +24,12 @@ bool KolotukhinAElemVecSumSEQ::PreProcessingImpl() {
 }
 
 bool KolotukhinAElemVecSumSEQ::RunImpl() {
-  const std::vector<int> &inputVec = GetInput();
-  int sum = std::accumulate(inputVec.begin(), inputVec.end(), 0);
+  const std::vector<uint64_t> &inputVec = GetInput();
+  volatile uint64_t sum = 0;
+  volatile uint64_t s = inputVec.size();
+  for (uint64_t i = 0; i < s; i++) {
+    sum += inputVec[i];
+  }
   GetOutput() = sum;
   return true;
 }

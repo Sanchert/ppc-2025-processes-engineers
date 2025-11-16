@@ -8,8 +8,9 @@
 namespace kolotukhin_a_elem_vec_sum {
 
 class KolotukhinAElemVecSumPerfTest : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kCount_ = 10000000;
+  const uint64_t kCount_ = 100000000;
   InType input_data_;
+  
   void SetUp() override {
     input_data_.resize(kCount_, 1);
   }

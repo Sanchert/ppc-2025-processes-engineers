@@ -28,14 +28,14 @@ class KolotukhinAElemVecSumFuncTests : public ppc::util::BaseRunFuncTests<InType
 
  protected:
   void SetUp() override {
-    TestType n = std::get<static_cast<int>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    TestType n = std::get<static_cast<uint64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
     input_data_.resize(n);
 
-    for (std::size_t i = 0; i < n; i++) {
+    for (uint64_t i = 0; i < n; i++) {
       input_data_[i] = i;
     }
 
-    sum_ = (n * n - n) / 2;
+    sum_ = ((n - 1) * n) / 2;
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
@@ -56,7 +56,7 @@ namespace {
 TEST_P(KolotukhinAElemVecSumFuncTests, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
-const std::array<TestType, 3> kTestParam = {10, 500, 10000};
+const std::array<TestType, 3> kTestParam = {100, 50000, 100000};
 const auto kTestTasksList = std::tuple_cat(
     ppc::util::AddFuncTask<KolotukhinAElemVecSumMPI, InType>(kTestParam, PPC_SETTINGS_kolotukhin_a_elem_vec_sum),
     ppc::util::AddFuncTask<KolotukhinAElemVecSumSEQ, InType>(kTestParam, PPC_SETTINGS_kolotukhin_a_elem_vec_sum));
