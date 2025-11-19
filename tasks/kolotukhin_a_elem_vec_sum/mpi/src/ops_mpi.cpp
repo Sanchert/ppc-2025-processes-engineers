@@ -42,10 +42,9 @@ bool KolotukhinAElemVecSumMPI::RunImpl() {
   for (uint64_t i = start; i < end && i < inputVec.size(); i++) {
     local_sum += inputVec[i];
   }
-  uint64_t global_sum;
+  uint64_t global_sum = 0;
 
   MPI_Allreduce(&local_sum, &global_sum, 1, MPI_LONG_LONG_INT, MPI_SUM, MPI_COMM_WORLD);
-  
   GetOutput() = global_sum;
   return true;
 }

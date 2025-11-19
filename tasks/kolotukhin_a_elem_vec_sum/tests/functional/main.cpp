@@ -56,7 +56,7 @@ namespace {
 TEST_P(KolotukhinAElemVecSumFuncTests, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
-const std::array<TestType, 3> kTestParam = {100, 50000, 100000};
+const std::array<TestType, 6> kTestParam = {1, 100, 123, 2431, 50000, 100000};
 const auto kTestTasksList = std::tuple_cat(
     ppc::util::AddFuncTask<KolotukhinAElemVecSumMPI, InType>(kTestParam, PPC_SETTINGS_kolotukhin_a_elem_vec_sum),
     ppc::util::AddFuncTask<KolotukhinAElemVecSumSEQ, InType>(kTestParam, PPC_SETTINGS_kolotukhin_a_elem_vec_sum));
