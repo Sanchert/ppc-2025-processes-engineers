@@ -1,13 +1,10 @@
 #include "kolotukhin_a_elem_vec_sum/mpi/include/ops_mpi.hpp"
 
 #include <mpi.h>
-
 #include <cstdint>
-#include <functional>
 #include <vector>
 
 #include "kolotukhin_a_elem_vec_sum/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace kolotukhin_a_elem_vec_sum {
 
@@ -37,10 +34,10 @@ bool KolotukhinAElemVecSumMPI::RunImpl() {
   auto uint_p_count = static_cast<std::uint64_t>(p_count);
   std::uint64_t vector_size = input_vec.size();
   std::uint64_t min_part = vector_size / uint_p_count;
-  std::uint64_t proc_size = min_part + (std::cmp_less(uint_pid, vector_size % uint_p_count) ? 1 : 0);
+  std::uint64_t proc_size = min_part + (std::less<>()(uint_pid, vector_size % uint_p_count) ? 1 : 0);
   std::uint64_t rem = vector_size % uint_p_count;
   std::uint64_t local_sum = 0;
-  std::uint64_t start = (min_part * uint_pid) + (std::cmp_less(uint_pid, rem) ? uint_pid : rem);
+  std::uint64_t start = (min_part * uint_pid) + (std::less<>()(uint_pid, rem) ? uint_pid : rem);
   std::uint64_t end = start + proc_size;
   for (std::uint64_t i = start; (i < end) && (i < input_vec.size()); i++) {
     local_sum += input_vec[i];
