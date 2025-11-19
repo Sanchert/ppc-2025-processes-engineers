@@ -1,8 +1,8 @@
 #pragma once
 
-#include "task/include/task.hpp"
-
 #include <cstdint>
+
+#include "task/include/task.hpp"
 
 namespace kolotukhin_a_elem_vec_sum {
 
