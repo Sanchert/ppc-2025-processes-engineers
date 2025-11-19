@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <cstdint>
+
 #include "kolotukhin_a_elem_vec_sum/common/include/common.hpp"
 #include "kolotukhin_a_elem_vec_sum/mpi/include/ops_mpi.hpp"
 #include "kolotukhin_a_elem_vec_sum/seq/include/ops_seq.hpp"
@@ -8,7 +10,7 @@
 namespace kolotukhin_a_elem_vec_sum {
 
 class KolotukhinAElemVecSumPerfTest : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const uint64_t kCount_ = 100000000;
+  const std::uint64_t kCount_ = 100000000;
   InType input_data_;
 
   void SetUp() override {

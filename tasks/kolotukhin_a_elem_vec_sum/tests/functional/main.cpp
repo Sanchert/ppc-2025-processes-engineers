@@ -1,16 +1,7 @@
 #include <gtest/gtest.h>
 #include <stb/stb_image.h>
 
-#include <algorithm>
-#include <array>
-#include <cstddef>
 #include <cstdint>
-#include <numeric>
-#include <stdexcept>
-#include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
 
 #include "kolotukhin_a_elem_vec_sum/common/include/common.hpp"
 #include "kolotukhin_a_elem_vec_sum/mpi/include/ops_mpi.hpp"
@@ -28,18 +19,17 @@ class KolotukhinAElemVecSumFuncTests : public ppc::util::BaseRunFuncTests<InType
 
  protected:
   void SetUp() override {
-    TestType n = std::get<static_cast<uint64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    TestType n = std::get<static_cast<std::uint64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
     input_data_.resize(n);
 
-    for (uint64_t i = 0; i < n; i++) {
+    for (std::uint64_t i = 0; i < n; i++) {
       input_data_[i] = i;
     }
-
-    sum_ = ((n - 1) * n) / 2;
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    return sum_ == output_data;
+    TestType n = std::get<static_cast<std::uint64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    return ((n - 1) * n) / 2 == output_data;
   }
 
   InType GetTestInputData() final {
@@ -48,7 +38,6 @@ class KolotukhinAElemVecSumFuncTests : public ppc::util::BaseRunFuncTests<InType
 
  private:
   InType input_data_;
-  OutType sum_;
 };
 
 namespace {

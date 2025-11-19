@@ -1,10 +1,9 @@
 #include "kolotukhin_a_elem_vec_sum/seq/include/ops_seq.hpp"
 
-#include <numeric>
+#include <cstdint>
 #include <vector>
 
 #include "kolotukhin_a_elem_vec_sum/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace kolotukhin_a_elem_vec_sum {
 
@@ -24,13 +23,13 @@ bool KolotukhinAElemVecSumSEQ::PreProcessingImpl() {
 }
 
 bool KolotukhinAElemVecSumSEQ::RunImpl() {
-  const std::vector<uint64_t> &inputVec = GetInput();
-  volatile uint64_t sum = 0;
-  volatile uint64_t s = inputVec.size();
-  for (uint64_t i = 0; i < s; i++) {
-    sum += inputVec[i];
+  const std::vector<std::uint64_t> &input_vec = GetInput();
+  volatile std::uint64_t total_sum = 0;
+  volatile std::uint64_t vec_size = input_vec.size();
+  for (std::uint64_t i = 0; i < vec_size; i++) {
+    total_sum += input_vec[i];
   }
-  GetOutput() = sum;
+  GetOutput() = total_sum;
   return true;
 }
 
