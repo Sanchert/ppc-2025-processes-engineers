@@ -30,12 +30,12 @@ bool KolotukhinAElemVecSumMPI::RunImpl() {
   int pCount;
   MPI_Comm_rank(MPI_COMM_WORLD, &pid);
   MPI_Comm_size(MPI_COMM_WORLD, &pCount);
-  
+
   const std::vector<uint64_t> &inputVec = GetInput();
   uint64_t vectorSize = inputVec.size();
   uint64_t minPart = vectorSize / pCount;
   uint64_t procSize = minPart + (pid < vectorSize % pCount ? 1 : 0);
-  
+
   uint64_t local_sum = 0;
   uint64_t start = minPart * pid + (pid < vectorSize % pCount ? pid : vectorSize % pCount);
   uint64_t end = start + procSize;
