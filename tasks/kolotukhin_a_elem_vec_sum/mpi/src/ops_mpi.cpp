@@ -1,6 +1,7 @@
 #include "kolotukhin_a_elem_vec_sum/mpi/include/ops_mpi.hpp"
 
 #include <mpi.h>
+
 #include <cstdint>
 #include <vector>
 
