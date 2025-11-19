@@ -3,6 +3,7 @@
 #include <mpi.h>
 
 #include <cstdint>
+#include <functional>
 #include <vector>
 
 #include "kolotukhin_a_elem_vec_sum/common/include/common.hpp"
@@ -32,8 +33,8 @@ bool KolotukhinAElemVecSumMPI::RunImpl() {
   MPI_Comm_size(MPI_COMM_WORLD, &p_count);
 
   const std::vector<std::uint64_t> &input_vec = GetInput();
-  std::uint64_t uint_pid = static_cast<std::uint64_t>(pid);
-  std::uint64_t uint_p_count = static_cast<std::uint64_t>(p_count);
+  auto uint_pid = static_cast<std::uint64_t>(pid);
+  auto uint_p_count = static_cast<std::uint64_t>(p_count);
   std::uint64_t vector_size = input_vec.size();
   std::uint64_t min_part = vector_size / uint_p_count;
   std::uint64_t proc_size = min_part + (std::cmp_less(uint_pid, vector_size % uint_p_count) ? 1 : 0);

@@ -1,7 +1,10 @@
 #include <gtest/gtest.h>
 #include <stb/stb_image.h>
 
+#include <array>
 #include <cstdint>
+#include <string>
+#include <tuple>
 
 #include "kolotukhin_a_elem_vec_sum/common/include/common.hpp"
 #include "kolotukhin_a_elem_vec_sum/mpi/include/ops_mpi.hpp"
