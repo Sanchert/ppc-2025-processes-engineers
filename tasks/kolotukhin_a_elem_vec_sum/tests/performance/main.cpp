@@ -20,7 +20,7 @@ class KolotukhinAElemVecSumPerfTest : public ppc::util::BaseRunPerfTests<InType,
     if (p_id == 0) {
       input_data_.resize(kCount_);
       for (std::uint64_t i = 0; i < kCount_; i++) {
-        input_data_[i] = i  % 256;
+        input_data_[i] = i % 256;
       }
     }
   }

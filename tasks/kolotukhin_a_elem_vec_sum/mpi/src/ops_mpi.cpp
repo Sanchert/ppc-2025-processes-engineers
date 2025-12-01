@@ -16,7 +16,7 @@ KolotukhinAElemVecSumMPI::KolotukhinAElemVecSumMPI(const InType &in) {
 }
 
 bool KolotukhinAElemVecSumMPI::ValidationImpl() {
-  if (!std::equal_to<>()(typeid(GetInput()), typeid(std::vector<int>&))){
+  if (!std::equal_to<>()(typeid(GetInput()), typeid(std::vector<int> &))) {
     return false;
   }
   // if (GetInput().empty()) {
@@ -45,7 +45,7 @@ bool KolotukhinAElemVecSumMPI::RunImpl() {
   }
 
   MPI_Bcast(&input_size, 1, MPI_UINT64_T, 0, MPI_COMM_WORLD);
-  
+
   int base_size = input_size / p_count;
   int my_size = base_size;
   if (p_id == 0) {

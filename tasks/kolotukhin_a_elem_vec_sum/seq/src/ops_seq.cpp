@@ -14,7 +14,7 @@ KolotukhinAElemVecSumSEQ::KolotukhinAElemVecSumSEQ(const InType &in) {
 }
 
 bool KolotukhinAElemVecSumSEQ::ValidationImpl() {
-  if (!std::equal_to<>()(typeid(GetInput()), typeid(std::vector<int>&))){
+  if (!std::equal_to<>()(typeid(GetInput()), typeid(std::vector<int> &))) {
     return false;
   }
   return true;

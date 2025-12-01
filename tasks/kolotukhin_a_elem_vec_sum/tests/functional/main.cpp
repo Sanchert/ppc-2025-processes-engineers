@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include <stb/stb_image.h>
 #include <mpi.h>
+#include <stb/stb_image.h>
 
 #include <array>
 #include <cstdint>
@@ -28,7 +28,7 @@ class KolotukhinAElemVecSumFuncTests : public ppc::util::BaseRunFuncTests<InType
       std::uint64_t size = std::get<static_cast<std::uint64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
       input_data_.resize(size);
       for (std::uint64_t i = 0; i < size; i++) {
-        input_data_[i] = i  % 256;
+        input_data_[i] = i % 256;
       }
     }
   }
