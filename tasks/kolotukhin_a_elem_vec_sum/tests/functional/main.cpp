@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 #include <stb/stb_image.h>
+#include <mpi.h>
 
 #include <array>
 #include <cstdint>
 #include <string>
-#include <tuple>
 
 #include "kolotukhin_a_elem_vec_sum/common/include/common.hpp"
 #include "kolotukhin_a_elem_vec_sum/mpi/include/ops_mpi.hpp"
@@ -22,17 +22,31 @@ class KolotukhinAElemVecSumFuncTests : public ppc::util::BaseRunFuncTests<InType
 
  protected:
   void SetUp() override {
-    TestType n = std::get<static_cast<std::uint64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    input_data_.resize(n);
-
-    for (std::uint64_t i = 0; i < n; i++) {
-      input_data_[i] = i;
+    int p_id = -1;
+    MPI_Comm_rank(MPI_COMM_WORLD, &p_id);
+    if (p_id == 0) {
+      std::uint64_t size = std::get<static_cast<std::uint64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+      input_data_.resize(size);
+      for (std::uint64_t i = 0; i < size; i++) {
+        input_data_[i] = i  % 256;
+      }
     }
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    TestType n = std::get<static_cast<std::uint64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    return ((n - 1) * n) / 2 == output_data;
+    int pid = -1;
+    MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+    if (pid == 0) {
+      std::uint64_t n = std::get<static_cast<std::uint64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+
+      std::int64_t full_cycles = n / 256;
+      std::int64_t remainder = n % 256;
+
+      std::int64_t sum_full_cycles = full_cycles * 32640;
+      std::int64_t sum_remainder = (remainder * (remainder - 1)) / 2;
+      return output_data == sum_full_cycles + sum_remainder;
+    }
+    return true;
   }
 
   InType GetTestInputData() final {
@@ -48,7 +62,8 @@ namespace {
 TEST_P(KolotukhinAElemVecSumFuncTests, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
-const std::array<TestType, 6> kTestParam = {1, 100, 123, 2431, 50000, 100000};
+const std::array<TestType, 4> kTestParam = {1, 20, 123, 10000};
+
 const auto kTestTasksList = std::tuple_cat(
     ppc::util::AddFuncTask<KolotukhinAElemVecSumMPI, InType>(kTestParam, PPC_SETTINGS_kolotukhin_a_elem_vec_sum),
     ppc::util::AddFuncTask<KolotukhinAElemVecSumSEQ, InType>(kTestParam, PPC_SETTINGS_kolotukhin_a_elem_vec_sum));

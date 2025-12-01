@@ -14,7 +14,10 @@ KolotukhinAElemVecSumSEQ::KolotukhinAElemVecSumSEQ(const InType &in) {
 }
 
 bool KolotukhinAElemVecSumSEQ::ValidationImpl() {
-  return GetOutput() == 0;
+  if (!std::equal_to<>()(typeid(GetInput()), typeid(std::vector<int>&))){
+    return false;
+  }
+  return true;
 }
 
 bool KolotukhinAElemVecSumSEQ::PreProcessingImpl() {
@@ -23,8 +26,8 @@ bool KolotukhinAElemVecSumSEQ::PreProcessingImpl() {
 }
 
 bool KolotukhinAElemVecSumSEQ::RunImpl() {
-  const std::vector<std::uint64_t> &input_vec = GetInput();
-  volatile std::uint64_t total_sum = 0;
+  const std::vector<int> &input_vec = GetInput();
+  volatile std::int64_t total_sum = 0;
   volatile std::uint64_t vec_size = input_vec.size();
   for (std::uint64_t i = 0; i < vec_size; i++) {
     total_sum += input_vec[i];

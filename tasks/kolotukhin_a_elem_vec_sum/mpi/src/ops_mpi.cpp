@@ -16,7 +16,13 @@ KolotukhinAElemVecSumMPI::KolotukhinAElemVecSumMPI(const InType &in) {
 }
 
 bool KolotukhinAElemVecSumMPI::ValidationImpl() {
-  return GetOutput() == 0;
+  if (!std::equal_to<>()(typeid(GetInput()), typeid(std::vector<int>&))){
+    return false;
+  }
+  // if (GetInput().empty()) {
+  //   return false;
+  // }
+  return true;
 }
 
 bool KolotukhinAElemVecSumMPI::PreProcessingImpl() {
@@ -25,27 +31,43 @@ bool KolotukhinAElemVecSumMPI::PreProcessingImpl() {
 }
 
 bool KolotukhinAElemVecSumMPI::RunImpl() {
-  int pid = 0;
+  int p_id = -1;
   int p_count = 0;
-  MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+  MPI_Comm_rank(MPI_COMM_WORLD, &p_id);
   MPI_Comm_size(MPI_COMM_WORLD, &p_count);
 
-  const std::vector<std::uint64_t> &input_vec = GetInput();
-  auto uint_pid = static_cast<std::uint64_t>(pid);
-  auto uint_p_count = static_cast<std::uint64_t>(p_count);
-  std::uint64_t vector_size = input_vec.size();
-  std::uint64_t min_part = vector_size / uint_p_count;
-  std::uint64_t proc_size = min_part + (std::less<>()(uint_pid, vector_size % uint_p_count) ? 1 : 0);
-  std::uint64_t rem = vector_size % uint_p_count;
-  std::uint64_t local_sum = 0;
-  std::uint64_t start = (min_part * uint_pid) + (std::less<>()(uint_pid, rem) ? uint_pid : rem);
-  std::uint64_t end = start + proc_size;
-  for (std::uint64_t i = start; (i < end) && (i < input_vec.size()); i++) {
-    local_sum += input_vec[i];
-  }
-  std::uint64_t global_sum = 0;
+  std::vector<int> input_data;
+  std::size_t input_size = 0;
 
-  MPI_Allreduce(&local_sum, &global_sum, 1, MPI_UINT64_T, MPI_SUM, MPI_COMM_WORLD);
+  if (p_id == 0) {
+    input_data = GetInput();
+    input_size = input_data.size();
+  }
+
+  MPI_Bcast(&input_size, 1, MPI_UINT64_T, 0, MPI_COMM_WORLD);
+  
+  int base_size = input_size / p_count;
+  int my_size = base_size;
+  if (p_id == 0) {
+    my_size += input_size % p_count;
+  }
+
+  std::vector<int> local_data(my_size);
+
+  MPI_Scatter(input_data.data(), base_size, MPI_INT, local_data.data(), base_size, MPI_INT, 0, MPI_COMM_WORLD);
+
+  if (p_id == 0 && input_size % p_count != 0) {
+    int remainder_start = base_size * p_count;
+    int remainder_size = input_size % p_count;
+    for (int i = 0; i < remainder_size; i++) {
+      local_data[base_size + i] = input_data[remainder_start + i];
+    }
+  }
+
+  std::int64_t local_sum = std::accumulate(local_data.begin(), local_data.end(), 0LL);
+  std::int64_t global_sum = 0;
+  MPI_Reduce(&local_sum, &global_sum, 1, MPI_INT64_T, MPI_SUM, 0, MPI_COMM_WORLD);
+
   GetOutput() = global_sum;
   return true;
 }

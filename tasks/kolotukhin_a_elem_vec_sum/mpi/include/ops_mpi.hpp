@@ -13,10 +13,10 @@ class KolotukhinAElemVecSumMPI : public BaseTask {
   explicit KolotukhinAElemVecSumMPI(const InType &in);
 
  private:
-  bool ValidationImpl() override;      // адекватность входных данных
-  bool PreProcessingImpl() override;   // предварительная обработка входных данных
-  bool RunImpl() override;             // реализация mpi/др.вид параллелизма
-  bool PostProcessingImpl() override;  // данные переводятся в удобочитаемый формат
+  bool ValidationImpl() override;
+  bool PreProcessingImpl() override;
+  bool RunImpl() override;
+  bool PostProcessingImpl() override;
 };
 
 }  // namespace kolotukhin_a_elem_vec_sum

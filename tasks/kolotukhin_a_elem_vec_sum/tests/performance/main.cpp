@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <mpi.h>
 
 #include <cstdint>
 
@@ -14,11 +15,29 @@ class KolotukhinAElemVecSumPerfTest : public ppc::util::BaseRunPerfTests<InType,
   InType input_data_;
 
   void SetUp() override {
-    input_data_.resize(kCount_, 1);
+    int p_id = -1;
+    MPI_Comm_rank(MPI_COMM_WORLD, &p_id);
+    if (p_id == 0) {
+      input_data_.resize(kCount_);
+      for (std::uint64_t i = 0; i < kCount_; i++) {
+        input_data_[i] = i  % 256;
+      }
+    }
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    return output_data == kCount_;
+    int p_id = -1;
+    MPI_Comm_rank(MPI_COMM_WORLD, &p_id);
+    if (p_id == 0) {
+      std::int64_t full_cycles = kCount_ / 256;
+      std::int64_t remainder = kCount_ % 256;
+
+      std::int64_t sum_full_cycles = full_cycles * 32640;
+      std::int64_t sum_remainder = (remainder * (remainder - 1)) / 2;
+
+      return output_data == sum_full_cycles + sum_remainder;
+    }
+    return true;
   }
 
   InType GetTestInputData() final {
