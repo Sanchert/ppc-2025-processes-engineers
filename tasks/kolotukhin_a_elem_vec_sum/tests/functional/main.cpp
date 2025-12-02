@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <string>
+#include <tuple>
 
 #include "kolotukhin_a_elem_vec_sum/common/include/common.hpp"
 #include "kolotukhin_a_elem_vec_sum/mpi/include/ops_mpi.hpp"
@@ -28,11 +29,11 @@ class KolotukhinAElemVecSumFuncTests : public ppc::util::BaseRunFuncTests<InType
   bool CheckTestOutputData(OutType &output_data) final {
     std::uint64_t n = std::get<static_cast<std::uint64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
 
-    std::int64_t full_cycles = n / 256;
-    std::int64_t remainder = n % 256;
+    std::uint64_t full_cycles = n / 256;
+    std::uint64_t remainder = n % 256;
 
-    std::int64_t sum_full_cycles = full_cycles * 32640;
-    std::int64_t sum_remainder = (remainder * (remainder - 1)) / 2;
+    std::uint64_t sum_full_cycles = full_cycles * 32640;
+    std::uint64_t sum_remainder = (remainder * (remainder - 1)) / 2;
     return output_data == sum_full_cycles + sum_remainder;
   }
 
@@ -41,7 +42,7 @@ class KolotukhinAElemVecSumFuncTests : public ppc::util::BaseRunFuncTests<InType
   }
 
  private:
-  InType input_data_;
+  InType input_data_{};
 };
 
 namespace {

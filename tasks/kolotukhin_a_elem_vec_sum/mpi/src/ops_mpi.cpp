@@ -3,7 +3,6 @@
 #include <mpi.h>
 
 #include <cstdint>
-#include <vector>
 
 #include "kolotukhin_a_elem_vec_sum/common/include/common.hpp"
 
@@ -16,10 +15,7 @@ KolotukhinAElemVecSumMPI::KolotukhinAElemVecSumMPI(const InType &in) {
 }
 
 bool KolotukhinAElemVecSumMPI::ValidationImpl() {
-  if (!std::equal_to<>()(typeid(GetInput()), typeid(std::uint64_t))) {
-    return false;
-  }
-  return true;
+  return std::equal_to<>()(typeid(GetInput()), typeid(std::uint64_t));
 }
 
 bool KolotukhinAElemVecSumMPI::PreProcessingImpl() {
@@ -33,7 +29,7 @@ bool KolotukhinAElemVecSumMPI::RunImpl() {
   MPI_Comm_rank(MPI_COMM_WORLD, &p_id);
   MPI_Comm_size(MPI_COMM_WORLD, &p_count);
 
-  std::size_t input_size = GetInput();
+  std::uint64_t input_size = GetInput();
   if (input_size == 0) {
     GetInput() = 0;
     return true;
@@ -44,7 +40,7 @@ bool KolotukhinAElemVecSumMPI::RunImpl() {
   std::uint64_t min_part = input_size / uint_p_count;
   std::uint64_t rem = input_size % uint_p_count;
   std::uint64_t proc_size = min_part + (std::less<>()(uint_pid, rem) ? 1 : 0);
-  std::int64_t local_sum = 0;
+  std::uint64_t local_sum = 0;
   std::uint64_t start = (min_part * uint_pid) + (std::less<>()(uint_pid, rem) ? uint_pid : rem);
   std::uint64_t end = start + proc_size;
   for (std::uint64_t i = start; (i < end); i++) {

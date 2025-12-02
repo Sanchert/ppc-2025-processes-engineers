@@ -11,18 +11,18 @@ namespace kolotukhin_a_elem_vec_sum {
 
 class KolotukhinAElemVecSumPerfTest : public ppc::util::BaseRunPerfTests<InType, OutType> {
   const std::uint64_t kCount_ = 1000000000;
-  InType input_data_;
+  InType input_data_{};
 
   void SetUp() override {
     input_data_ = kCount_;
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    std::int64_t full_cycles = kCount_ / 256;
-    std::int64_t remainder = kCount_ % 256;
+    std::uint64_t full_cycles = kCount_ / 256;
+    std::uint64_t remainder = kCount_ % 256;
 
-    std::int64_t sum_full_cycles = full_cycles * 32640;
-    std::int64_t sum_remainder = (remainder * (remainder - 1)) / 2;
+    std::uint64_t sum_full_cycles = full_cycles * 32640;
+    std::uint64_t sum_remainder = (remainder * (remainder - 1)) / 2;
 
     return output_data == sum_full_cycles + sum_remainder;
   }
