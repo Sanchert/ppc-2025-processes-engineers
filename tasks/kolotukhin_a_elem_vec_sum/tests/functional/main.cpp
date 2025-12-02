@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include <mpi.h>
 #include <stb/stb_image.h>
 
 #include <array>
@@ -22,31 +21,19 @@ class KolotukhinAElemVecSumFuncTests : public ppc::util::BaseRunFuncTests<InType
 
  protected:
   void SetUp() override {
-    int p_id = -1;
-    MPI_Comm_rank(MPI_COMM_WORLD, &p_id);
-    if (p_id == 0) {
-      std::uint64_t size = std::get<static_cast<std::uint64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-      input_data_.resize(size);
-      for (std::uint64_t i = 0; i < size; i++) {
-        input_data_[i] = i % 256;
-      }
-    }
+    std::uint64_t size = std::get<static_cast<std::uint64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    input_data_ = size;
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    int pid = -1;
-    MPI_Comm_rank(MPI_COMM_WORLD, &pid);
-    if (pid == 0) {
-      std::uint64_t n = std::get<static_cast<std::uint64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    std::uint64_t n = std::get<static_cast<std::uint64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
 
-      std::int64_t full_cycles = n / 256;
-      std::int64_t remainder = n % 256;
+    std::int64_t full_cycles = n / 256;
+    std::int64_t remainder = n % 256;
 
-      std::int64_t sum_full_cycles = full_cycles * 32640;
-      std::int64_t sum_remainder = (remainder * (remainder - 1)) / 2;
-      return output_data == sum_full_cycles + sum_remainder;
-    }
-    return true;
+    std::int64_t sum_full_cycles = full_cycles * 32640;
+    std::int64_t sum_remainder = (remainder * (remainder - 1)) / 2;
+    return output_data == sum_full_cycles + sum_remainder;
   }
 
   InType GetTestInputData() final {

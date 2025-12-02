@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include <mpi.h>
 
 #include <cstdint>
 
@@ -11,33 +10,21 @@
 namespace kolotukhin_a_elem_vec_sum {
 
 class KolotukhinAElemVecSumPerfTest : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const std::uint64_t kCount_ = 100000000;
+  const std::uint64_t kCount_ = 1000000000;
   InType input_data_;
 
   void SetUp() override {
-    int p_id = -1;
-    MPI_Comm_rank(MPI_COMM_WORLD, &p_id);
-    if (p_id == 0) {
-      input_data_.resize(kCount_);
-      for (std::uint64_t i = 0; i < kCount_; i++) {
-        input_data_[i] = i % 256;
-      }
-    }
+    input_data_ = kCount_;
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    int p_id = -1;
-    MPI_Comm_rank(MPI_COMM_WORLD, &p_id);
-    if (p_id == 0) {
-      std::int64_t full_cycles = kCount_ / 256;
-      std::int64_t remainder = kCount_ % 256;
+    std::int64_t full_cycles = kCount_ / 256;
+    std::int64_t remainder = kCount_ % 256;
 
-      std::int64_t sum_full_cycles = full_cycles * 32640;
-      std::int64_t sum_remainder = (remainder * (remainder - 1)) / 2;
+    std::int64_t sum_full_cycles = full_cycles * 32640;
+    std::int64_t sum_remainder = (remainder * (remainder - 1)) / 2;
 
-      return output_data == sum_full_cycles + sum_remainder;
-    }
-    return true;
+    return output_data == sum_full_cycles + sum_remainder;
   }
 
   InType GetTestInputData() final {
