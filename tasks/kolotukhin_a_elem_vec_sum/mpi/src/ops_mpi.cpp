@@ -46,7 +46,7 @@ bool KolotukhinAElemVecSumMPI::RunImpl() {
 
   MPI_Bcast(&input_size, 1, MPI_UINT64_T, 0, MPI_COMM_WORLD);
 
-  std::uint64_t p_count = static_cast<uint64_t>(pcount);
+  auto p_count = static_cast<uint64_t>(pcount);
   std::uint64_t base_size = input_size / p_count;
   std::uint64_t proc_size = base_size;
   if (p_id == 0) {
