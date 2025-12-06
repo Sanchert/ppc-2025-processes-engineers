@@ -12,17 +12,17 @@ namespace kolotukhin_a_elem_vec_sum {
 
 class KolotukhinAElemVecSumPerfTest : public ppc::util::BaseRunPerfTests<InType, OutType> {
   std::uint64_t kCount_ = 100000000;
-  std::int64_t test_answer = 500150000000;
-  InType input_data_{};
+  std::int64_t test_answer_ = 500150000000;
+  InType input_data_;
 
   void SetUp() override {
     int p_id = -1;
     MPI_Comm_rank(MPI_COMM_WORLD, &p_id);
     if (p_id == 0) {
       input_data_.resize(kCount_);
-      std::int64_t seed = 42;
+      int seed = 42;
       for (std::uint64_t i = 0; i < kCount_; i++) {
-        seed = (seed * 13 + 7) % 10000;  // числа от 0 до 999999
+        seed = (seed * 13 + 7) % 10000;
         input_data_[i] = seed;
       }
     }
@@ -32,7 +32,7 @@ class KolotukhinAElemVecSumPerfTest : public ppc::util::BaseRunPerfTests<InType,
     int p_id = -1;
     MPI_Comm_rank(MPI_COMM_WORLD, &p_id);
     if (p_id == 0) {
-      return output_data == test_answer;
+      return output_data == test_answer_;
     }
     return true;
   }
