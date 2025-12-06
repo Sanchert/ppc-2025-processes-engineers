@@ -17,7 +17,7 @@ KolotukhinAElemVecSumMPI::KolotukhinAElemVecSumMPI(const InType &in) {
 }
 
 bool KolotukhinAElemVecSumMPI::ValidationImpl() {
-  return std::equal_to<>()(typeid(GetInput()), typeid(std::vector<int> &));
+  return std::equal_to<>()(typeid(GetInput()), typeid(std::uint64_t &));
 }
 
 bool KolotukhinAElemVecSumMPI::PreProcessingImpl() {
@@ -35,8 +35,13 @@ bool KolotukhinAElemVecSumMPI::RunImpl() {
   std::uint64_t input_size = 0;
 
   if (p_id == 0) {
-    input_data = GetInput();
-    input_size = input_data.size();
+    input_size = GetInput();
+    input_data.resize(input_size);
+    int seed = 42;
+    for (std::uint64_t i = 0; i < input_size; i++) {
+      seed = (seed * 13 + 7) % 10000;
+      input_data[i] = seed;
+    }
   }
 
   MPI_Bcast(&input_size, 1, MPI_UINT64_T, 0, MPI_COMM_WORLD);
@@ -62,7 +67,7 @@ bool KolotukhinAElemVecSumMPI::RunImpl() {
 
   std::int64_t local_sum = std::accumulate(local_data.begin(), local_data.end(), 0LL);
   std::int64_t global_sum = 0;
-  MPI_Reduce(&local_sum, &global_sum, 1, MPI_INT64_T, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Allreduce(&local_sum, &global_sum, 1, MPI_INT64_T, MPI_SUM, MPI_COMM_WORLD);
 
   GetOutput() = global_sum;
   return true;

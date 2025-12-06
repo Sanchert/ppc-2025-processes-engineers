@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include <mpi.h>
 #include <stb/stb_image.h>
 
 #include <array>
@@ -23,29 +22,15 @@ class KolotukhinAElemVecSumFuncTests : public ppc::util::BaseRunFuncTests<InType
 
  protected:
   void SetUp() override {
-    int p_id = -1;
-    MPI_Comm_rank(MPI_COMM_WORLD, &p_id);
-    if (p_id == 0) {
-      TestType tt = std::get<static_cast<std::int64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-      std::uint64_t size = std::get<0>(tt);
-      input_data_.resize(size);
-      int seed = 42;
-      for (std::uint64_t i = 0; i < size; i++) {
-        seed = (seed * 13 + 7) % 10000;
-        input_data_[i] = seed;
-      }
-    }
+    TestType tt = std::get<static_cast<std::int64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    std::uint64_t size = std::get<0>(tt);
+    input_data_ = size;
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    int pid = -1;
-    MPI_Comm_rank(MPI_COMM_WORLD, &pid);
     TestType tt = std::get<static_cast<std::int64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
     std::int64_t test_answer = std::get<1>(tt);
-    if (pid == 0) {
-      return output_data == test_answer;
-    }
-    return true;
+    return output_data == test_answer;
   }
 
   InType GetTestInputData() final {
@@ -53,7 +38,7 @@ class KolotukhinAElemVecSumFuncTests : public ppc::util::BaseRunFuncTests<InType
   }
 
  private:
-  InType input_data_;
+  InType input_data_{};
 };
 
 namespace {

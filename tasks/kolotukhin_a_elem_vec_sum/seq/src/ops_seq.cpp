@@ -1,7 +1,6 @@
 #include "kolotukhin_a_elem_vec_sum/seq/include/ops_seq.hpp"
 
 #include <cstdint>
-#include <vector>
 
 #include "kolotukhin_a_elem_vec_sum/common/include/common.hpp"
 
@@ -14,7 +13,7 @@ KolotukhinAElemVecSumSEQ::KolotukhinAElemVecSumSEQ(const InType &in) {
 }
 
 bool KolotukhinAElemVecSumSEQ::ValidationImpl() {
-  return std::equal_to<>()(typeid(GetInput()), typeid(std::vector<int> &));
+  return std::equal_to<>()(typeid(GetInput()), typeid(std::uint64_t &));
 }
 
 bool KolotukhinAElemVecSumSEQ::PreProcessingImpl() {
@@ -23,11 +22,12 @@ bool KolotukhinAElemVecSumSEQ::PreProcessingImpl() {
 }
 
 bool KolotukhinAElemVecSumSEQ::RunImpl() {
-  const std::vector<int> &input_vec = GetInput();
+  std::uint64_t size = GetInput();
+  std::int64_t seed = 42;
   volatile std::int64_t total_sum = 0;
-  volatile std::uint64_t vec_size = input_vec.size();
-  for (std::uint64_t i = 0; i < vec_size; i++) {
-    total_sum += input_vec[i];
+  for (std::uint64_t i = 0; i < size; i++) {
+    seed = (seed * 13 + 7) % 10000;
+    total_sum += seed;
   }
   GetOutput() = total_sum;
   return true;
