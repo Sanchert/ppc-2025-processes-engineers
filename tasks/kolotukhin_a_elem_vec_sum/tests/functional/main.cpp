@@ -29,9 +29,9 @@ class KolotukhinAElemVecSumFuncTests : public ppc::util::BaseRunFuncTests<InType
       TestType tt = std::get<static_cast<std::int64_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
       std::uint64_t size = std::get<0>(tt);
       input_data_.resize(size);
-      std::int64_t seed = 42;
+      int seed = 42;
       for (std::uint64_t i = 0; i < size; i++) {
-        seed = (seed * 13 + 7) % 10000;  // числа от 0 до 9999
+        seed = (seed * 13 + 7) % 10000;
         input_data_[i] = seed;
       }
     }
@@ -53,7 +53,7 @@ class KolotukhinAElemVecSumFuncTests : public ppc::util::BaseRunFuncTests<InType
   }
 
  private:
-  InType input_data_{};
+  InType input_data_;
 };
 
 namespace {
