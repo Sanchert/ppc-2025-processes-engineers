@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <mpi.h>
 
 #include <cstdint>
 
@@ -10,21 +11,30 @@
 namespace kolotukhin_a_elem_vec_sum {
 
 class KolotukhinAElemVecSumPerfTest : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const std::uint64_t kCount_ = 1000000000;
+  std::uint64_t kCount_ = 100000000;
+  std::int64_t test_answer = 500150000000;
   InType input_data_{};
 
   void SetUp() override {
-    input_data_ = kCount_;
+    int p_id = -1;
+    MPI_Comm_rank(MPI_COMM_WORLD, &p_id);
+    if (p_id == 0) {
+      input_data_.resize(kCount_);
+      std::int64_t seed = 42;
+      for (std::uint64_t i = 0; i < kCount_; i++) {
+        seed = (seed * 13 + 7) % 10000;  // числа от 0 до 999999
+        input_data_[i] = seed;
+      }
+    }
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    std::uint64_t full_cycles = kCount_ / 256;
-    std::uint64_t remainder = kCount_ % 256;
-
-    std::uint64_t sum_full_cycles = full_cycles * 32640;
-    std::uint64_t sum_remainder = (remainder * (remainder - 1)) / 2;
-
-    return output_data == sum_full_cycles + sum_remainder;
+    int p_id = -1;
+    MPI_Comm_rank(MPI_COMM_WORLD, &p_id);
+    if (p_id == 0) {
+      return output_data == test_answer;
+    }
+    return true;
   }
 
   InType GetTestInputData() final {
