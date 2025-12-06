@@ -46,7 +46,7 @@ bool KolotukhinAElemVecSumMPI::RunImpl() {
 
   MPI_Bcast(&input_size, 1, MPI_UINT64_T, 0, MPI_COMM_WORLD);
 
-  auto p_count = static_cast<uint64_t>(pcount);
+  std::uint64_t p_count = static_cast<uint64_t>(pcount);
   std::uint64_t base_size = input_size / p_count;
   std::uint64_t proc_size = base_size;
   if (p_id == 0) {
@@ -55,7 +55,8 @@ bool KolotukhinAElemVecSumMPI::RunImpl() {
 
   std::vector<int> local_data(proc_size);
 
-  MPI_Scatter(input_data.data(), base_size, MPI_INT, local_data.data(), base_size, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Scatter(input_data.data(), static_cast<int>(base_size), MPI_INT, local_data.data(), static_cast<int>(base_size),
+              MPI_INT, 0, MPI_COMM_WORLD);
 
   if (p_id == 0 && input_size % p_count != 0) {
     std::uint64_t remainder_start = base_size * p_count;
