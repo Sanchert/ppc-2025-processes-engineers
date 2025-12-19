@@ -25,11 +25,6 @@ bool KolotukhinAHypercubeSEQ::PreProcessingImpl() {
 }
 
 bool KolotukhinAHypercubeSEQ::RunImpl() {
-  std::vector<int> data(100000);
-  for (int i = 0; i < 100000; i++) {
-    data[i] = i * 2 - 1;
-  }
-  data.clear();
   return true;
 }
 
