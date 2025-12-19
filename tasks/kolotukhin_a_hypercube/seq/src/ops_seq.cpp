@@ -1,5 +1,9 @@
 #include "kolotukhin_a_hypercube/seq/include/ops_seq.hpp"
 
+#include <algorithm>
+#include <atomic>
+#include <cmath>
+#include <numeric>
 #include <vector>
 
 #include "kolotukhin_a_hypercube/common/include/common.hpp"
@@ -20,11 +24,23 @@ bool KolotukhinAHypercubeSEQ::ValidationImpl() {
 }
 
 bool KolotukhinAHypercubeSEQ::PreProcessingImpl() {
-  GetOutput().data.clear();
   return true;
 }
 
 bool KolotukhinAHypercubeSEQ::RunImpl() {
+  volatile std::atomic<double> compute_load{0.0};
+  double temp = 0.0;
+  double val = 0.0;
+  for (int iter = 0; iter < 100000; iter++) {
+    val = static_cast<double>(iter);
+    compute_load.store(compute_load.load() + std::sin(val * 0.0001) * std::cos(val * 0.0001));
+    if (iter % 1000 == 0) {
+      temp = compute_load.load();
+      compute_load.store(std::fmod(temp, 1000.0));
+    }
+  }
+  double final_result = compute_load.load();
+  (void)final_result;
   return true;
 }
 
