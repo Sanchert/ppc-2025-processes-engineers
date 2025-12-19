@@ -12,7 +12,7 @@ KolotukhinAHypercubeSEQ::KolotukhinAHypercubeSEQ(const InType &in) {
   GetInput() = in;
   GetOutput().data = std::vector<int>{};
   GetOutput().process_id = 0;
-  GetOutput().exec =  false;
+  GetOutput().exec = false;
 }
 
 bool KolotukhinAHypercubeSEQ::ValidationImpl() {

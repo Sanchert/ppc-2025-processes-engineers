@@ -17,7 +17,6 @@ class KolotukhinAHypercubeSEQ : public BaseTask {
   bool PreProcessingImpl() override;
   bool RunImpl() override;
   bool PostProcessingImpl() override;
-
 };
 
 }  // namespace kolotukhin_a_hypercube
