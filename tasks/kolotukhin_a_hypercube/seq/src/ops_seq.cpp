@@ -1,6 +1,5 @@
 #include "kolotukhin_a_hypercube/seq/include/ops_seq.hpp"
 
-
 #include <atomic>
 #include <cmath>
 #include <vector>

@@ -12,7 +12,7 @@
 
 namespace kolotukhin_a_hypercube {
 
-KolotukhinAHypercubeMPI::KolotukhinAHypercubeMPI(const InType &in)  : exec_(true){
+KolotukhinAHypercubeMPI::KolotukhinAHypercubeMPI(const InType &in) : exec_(true) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput().data = std::vector<int>{};
@@ -49,7 +49,7 @@ void KolotukhinAHypercubeMPI::PerformComputeLoad(int iterations) {
   [[maybe_unused]] double final_result = compute_load.load();
 }
 
-void KolotukhinAHypercubeMPI::SendData(std::vector<int>& data, int next_neighbor) {
+void KolotukhinAHypercubeMPI::SendData(std::vector<int> &data, int next_neighbor) {
   std::uint64_t data_size = data.size();
   MPI_Send(&data_size, 1, MPI_UINT64_T, next_neighbor, 0, MPI_COMM_WORLD);
   if (data_size > 0) {
@@ -57,7 +57,7 @@ void KolotukhinAHypercubeMPI::SendData(std::vector<int>& data, int next_neighbor
   }
 }
 
-void KolotukhinAHypercubeMPI::RecvData(std::vector<int>& data, int prev_neighbor) {
+void KolotukhinAHypercubeMPI::RecvData(std::vector<int> &data, int prev_neighbor) {
   std::uint64_t data_size = data.size();
   MPI_Recv(&data_size, 1, MPI_UINT64_T, prev_neighbor, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   if (data_size > 0) {
@@ -66,7 +66,7 @@ void KolotukhinAHypercubeMPI::RecvData(std::vector<int>& data, int prev_neighbor
   }
 }
 
-void KolotukhinAHypercubeMPI::CalcPositions(int my_rank, std::vector<int>& path, int &my_pos, int &next, int &prev) {
+void KolotukhinAHypercubeMPI::CalcPositions(int my_rank, std::vector<int> &path, int &my_pos, int &next, int &prev) {
   for (size_t i = 0; i < path.size(); i++) {
     if (my_rank == path[i]) {
       my_pos = static_cast<int>(i);
@@ -173,7 +173,7 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   }
 
   GetOutput().data = data;
-  GetOutput().process_id = rank; 
+  GetOutput().process_id = rank;
   GetOutput().exec = exec_;
   MPI_Barrier(MPI_COMM_WORLD);
   return true;
