@@ -68,8 +68,9 @@ bool KolotukhinAHypercubeSEQ::RunImpl() {
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-  if ((GetInput().source < 0) || (GetInput().source > world_size - 1) || (GetInput().dest < 0) ||
-      (GetInput().dest > world_size - 1) || (world_size <= 0) || ((world_size & (world_size - 1)) != 0)) {
+  if ((GetInput().source < 0) || (GetInput().source > world_size - 1) ||
+      ((GetInput().dest < 0) && (GetInput().dest != -2)) || (GetInput().dest > world_size - 1) || (world_size <= 0) ||
+      ((world_size & (world_size - 1)) != 0)) {
     valid_ = false;
   }
   if (!valid_) {
@@ -84,7 +85,9 @@ bool KolotukhinAHypercubeSEQ::RunImpl() {
   const auto &input = GetInput();
   int source = input.source;
   int dest = input.dest;
-
+  if (dest == -2) {
+    dest = world_size - 1;
+  }
   std::vector<int> data;
   size_t data_size = 0;
 

@@ -102,8 +102,9 @@ std::vector<int> KolotukhinAHypercubeMPI::CalcPath(int source, int dest, int dim
 bool KolotukhinAHypercubeMPI::ValidationImpl() {
   int world_size = 0;
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-  if ((GetInput().source < 0) || (GetInput().source > world_size - 1) || (GetInput().dest < 0) ||
-      (GetInput().dest > world_size - 1) || (world_size <= 0) || ((world_size & (world_size - 1)) != 0)) {
+  if ((GetInput().source < 0) || (GetInput().source > world_size - 1) ||
+      ((GetInput().dest < 0) && (GetInput().dest != -2)) || (GetInput().dest > world_size - 1) || (world_size <= 0) ||
+      ((world_size & (world_size - 1)) != 0)) {
     exec_ = false;
   }
   return true;
@@ -130,6 +131,9 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   const auto &input = GetInput();
   int source = input.source;
   int dest = input.dest;
+  if (dest == -2) {
+    dest = world_size - 1;
+  }
   std::vector<int> data{};
   std::uint64_t data_size = 0;
 
