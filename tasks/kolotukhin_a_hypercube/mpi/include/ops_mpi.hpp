@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "kolotukhin_a_hypercube/common/include/common.hpp"
 #include "task/include/task.hpp"
 
@@ -21,6 +23,10 @@ class KolotukhinAHypercubeMPI : public BaseTask {
   static int CalculateHypercubeDimension(int num_proc);
   static int GetNeighbor(int rank, int dim);
   static void PerformComputeLoad(int iterations);
+  static void SendData(std::vector<int>& data, int next_neighbor);
+  static void RecvData(std::vector<int>& data, int prev_neighbor);
+  static void CalcPositions(int my_rank, std::vector<int>& path, int &my_pos, int &next, int &prev);
+  static std::vector<int> CalcPath(int source, int dest, int dimensions);
 
   bool exec_ = true;
 };

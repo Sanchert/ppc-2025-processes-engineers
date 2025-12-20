@@ -36,7 +36,7 @@ bool KolotukhinAHypercubeSEQ::RunImpl() {
       compute_load.store(std::fmod(temp, 1000.0));
     }
   }
-  [[maybe_unused]] final_result = compute_load.load();
+  [[maybe_unused]] double final_result = compute_load.load();
   return true;
 }
 

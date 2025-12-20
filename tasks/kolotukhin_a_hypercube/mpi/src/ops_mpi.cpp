@@ -49,6 +49,56 @@ void KolotukhinAHypercubeMPI::PerformComputeLoad(int iterations) {
   [[maybe_unused]] double final_result = compute_load.load();
 }
 
+void KolotukhinAHypercubeMPI::SendData(std::vector<int>& data, int next_neighbor) {
+  std::uint64_t data_size = data.size();
+  MPI_Send(&data_size, 1, MPI_UINT64_T, next_neighbor, 0, MPI_COMM_WORLD);
+  if (data_size > 0) {
+    MPI_Send(data.data(), static_cast<int>(data_size), MPI_INT, next_neighbor, 1, MPI_COMM_WORLD);
+  }
+}
+
+void KolotukhinAHypercubeMPI::RecvData(std::vector<int>& data, int prev_neighbor) {
+  std::uint64_t data_size = data.size();
+  MPI_Recv(&data_size, 1, MPI_UINT64_T, prev_neighbor, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  if (data_size > 0) {
+    data.resize(data_size);
+    MPI_Recv(data.data(), static_cast<int>(data_size), MPI_INT, prev_neighbor, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  }
+}
+
+void KolotukhinAHypercubeMPI::CalcPositions(int my_rank, std::vector<int>& path, int &my_pos, int &next, int &prev) {
+  for (size_t i = 0; i < path.size(); i++) {
+    if (my_rank == path[i]) {
+      my_pos = static_cast<int>(i);
+      if (i > 0) {
+        prev = path[i - 1];
+      }
+      if (i < path.size() - 1) {
+        next = path[i + 1];
+      }
+      break;
+    }
+  }
+}
+
+std::vector<int> KolotukhinAHypercubeMPI::CalcPath(int source, int dest, int dimensions) {
+  std::vector<int> path;
+  int current = source;
+  path.push_back(current);
+  int xor_val = source ^ dest;
+  for (int dim = 0; dim < dimensions; dim++) {
+    int mask = 1 << dim;
+    if ((xor_val & mask) != 0) {
+      current = current ^ mask;
+      path.push_back(current);
+      if (current == dest) {
+        break;
+      }
+    }
+  }
+  return path;
+}
+
 bool KolotukhinAHypercubeMPI::ValidationImpl() {
   int world_size = 0;
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
@@ -71,7 +121,7 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
   if (!exec_) {
-    GetOutput().data.clear;
+    GetOutput().data.clear();
     GetOutput().process_id = -1;
     GetOutput().exec = exec_;
     return true;
@@ -101,65 +151,69 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
     return true;
   }
 
-  std::vector<int> path{};
-  int current = source;
-  path.push_back(current);
-  int xor_val = source ^ dest;
-  for (int dim = 0; dim < dimensions; dim++) {
-    int mask = 1 << dim;
-    if ((xor_val & mask) != 0) {
-      current = current ^ mask;
-      path.push_back(current);
-      if (current == dest) {
-        break;
-      }
-    }
-  }
+  std::vector<int> path = CalcPath(source, dest, dimensions);
+  // int current = source;
+  // path.push_back(current);
+  // int xor_val = source ^ dest;
+  // for (int dim = 0; dim < dimensions; dim++) {
+  //   int mask = 1 << dim;
+  //   if ((xor_val & mask) != 0) {
+  //     current = current ^ mask;
+  //     path.push_back(current);
+  //     if (current == dest) {
+  //       break;
+  //     }
+  //   }
+  // }
 
   int my_position = -1;
   int prev_neighbor = -1;
   int next_neighbor = -1;
-
-  for (size_t i = 0; i < path.size(); i++) {
-    if (rank == path[i]) {
-      my_position = static_cast<int>(i);
-      if (i > 0) {
-        prev_neighbor = path[i - 1];
-      }
-      if (i < path.size() - 1) {
-        next_neighbor = path[i + 1];
-      }
-      break;
-    }
-  }
+  CalcPositions(rank, path, my_position, next_neighbor, prev_neighbor);
+  // for (size_t i = 0; i < path.size(); i++) {
+  //   if (rank == path[i]) {
+  //     my_position = static_cast<int>(i);
+  //     if (i > 0) {
+  //       prev_neighbor = path[i - 1];
+  //     }
+  //     if (i < path.size() - 1) {
+  //       next_neighbor = path[i + 1];
+  //     }
+  //     break;
+  //   }
+  // }
 
   if (my_position >= 0) {
     if (rank == source) {
       PerformComputeLoad(150000);
-      MPI_Send(&data_size, 1, MPI_UINT64_T, next_neighbor, 0, MPI_COMM_WORLD);
-      if (data_size > 0) {
-        MPI_Send(data.data(), static_cast<int>(data_size), MPI_INT, next_neighbor, 1, MPI_COMM_WORLD);
-      }
+      SendData(data, next_neighbor);
+      // MPI_Send(&data_size, 1, MPI_UINT64_T, next_neighbor, 0, MPI_COMM_WORLD);
+      // if (data_size > 0) {
+      //   MPI_Send(data.data(), static_cast<int>(data_size), MPI_INT, next_neighbor, 1, MPI_COMM_WORLD);
+      // }
     } else if (rank == dest) {
-      MPI_Recv(&data_size, 1, MPI_UINT64_T, prev_neighbor, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      if (data_size > 0) {
-        data.resize(data_size);
-        MPI_Recv(data.data(), static_cast<int>(data_size), MPI_INT, prev_neighbor, 1, MPI_COMM_WORLD,
-                 MPI_STATUS_IGNORE);
-      }
+      RecvData(data, prev_neighbor);
+      // MPI_Recv(&data_size, 1, MPI_UINT64_T, prev_neighbor, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      // if (data_size > 0) {
+      //   data.resize(data_size);
+      //   MPI_Recv(data.data(), static_cast<int>(data_size), MPI_INT, prev_neighbor, 1, MPI_COMM_WORLD,
+      //            MPI_STATUS_IGNORE);
+      // }
       PerformComputeLoad(150000);
     } else {
-      MPI_Recv(&data_size, 1, MPI_UINT64_T, prev_neighbor, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      if (data_size > 0) {
-        data.resize(data_size);
-        MPI_Recv(data.data(), static_cast<int>(data_size), MPI_INT, prev_neighbor, 1, MPI_COMM_WORLD,
-                 MPI_STATUS_IGNORE);
-      }
+      RecvData(data, prev_neighbor);
+      // MPI_Recv(&data_size, 1, MPI_UINT64_T, prev_neighbor, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      // if (data_size > 0) {
+      //   data.resize(data_size);
+      //   MPI_Recv(data.data(), static_cast<int>(data_size), MPI_INT, prev_neighbor, 1, MPI_COMM_WORLD,
+      //            MPI_STATUS_IGNORE);
+      // }
       PerformComputeLoad(150000);
-      MPI_Send(&data_size, 1, MPI_UINT64_T, next_neighbor, 0, MPI_COMM_WORLD);
-      if (data_size > 0) {
-        MPI_Send(data.data(), static_cast<int>(data_size), MPI_INT, next_neighbor, 1, MPI_COMM_WORLD);
-      }
+      SendData(data, next_neighbor);
+      // MPI_Send(&data_size, 1, MPI_UINT64_T, next_neighbor, 0, MPI_COMM_WORLD);
+      // if (data_size > 0) {
+      //   MPI_Send(data.data(), static_cast<int>(data_size), MPI_INT, next_neighbor, 1, MPI_COMM_WORLD);
+      // }
     }
   }
 
