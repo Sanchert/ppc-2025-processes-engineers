@@ -12,7 +12,7 @@
 
 namespace kolotukhin_a_hypercube {
 
-KolotukhinAHypercubeMPI::KolotukhinAHypercubeMPI(const InType &in) : exec_(true) {
+KolotukhinAHypercubeMPI::KolotukhinAHypercubeMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput().data = std::vector<int>{};
