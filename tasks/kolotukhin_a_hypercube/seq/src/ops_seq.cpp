@@ -58,11 +58,7 @@ bool KolotukhinAHypercubeSEQ::ValidationImpl() {
 
 bool KolotukhinAHypercubeSEQ::PreProcessingImpl() {
   GetOutput().data.clear();
-  GetOutput() = {
-      {},
-      -1,
-      valid_,
-  };
+  GetOutput() = {{}, -1, valid_};
   return true;
 }
 
@@ -76,11 +72,12 @@ bool KolotukhinAHypercubeSEQ::RunImpl() {
       (GetInput().dest > world_size - 1) || (world_size <= 0) || ((world_size & (world_size - 1)) != 0)) {
     valid_ = false;
   }
-
   if (!valid_) {
-    GetOutput().data = std::vector<int>{};
-    GetOutput().exec = valid_;
-    GetOutput().process_id = -1;
+    GetOutput() = {
+        std::vector<int>{},
+        -1,
+        valid_,
+    };
     return true;
   }
 
