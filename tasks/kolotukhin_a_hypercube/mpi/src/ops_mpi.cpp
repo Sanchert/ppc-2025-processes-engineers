@@ -160,14 +160,14 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
 
   if (my_position >= 0) {
     if (rank == source) {
-      PerformComputeLoad(150000);
+      // PerformComputeLoad(150000);
       SendData(data, next_neighbor);
     } else if (rank == dest) {
       RecvData(data, prev_neighbor);
-      PerformComputeLoad(150000);
+      // PerformComputeLoad(150000);
     } else {
       RecvData(data, prev_neighbor);
-      PerformComputeLoad(150000);
+      // PerformComputeLoad(150000);
       SendData(data, next_neighbor);
     }
   }

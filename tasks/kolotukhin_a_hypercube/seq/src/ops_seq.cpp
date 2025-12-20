@@ -24,18 +24,18 @@ bool KolotukhinAHypercubeSEQ::PreProcessingImpl() {
 }
 
 bool KolotukhinAHypercubeSEQ::RunImpl() {
-  std::atomic<double> compute_load{0.0};
-  double temp = 0.0;
-  double val = 0.0;
-  for (int iter = 0; iter < 100000; iter++) {
-    val = static_cast<double>(iter);
-    compute_load.store(compute_load.load() + (std::sin(val * 0.0001) * std::cos(val * 0.0001)));
-    if (iter % 1000 == 0) {
-      temp = compute_load.load();
-      compute_load.store(std::fmod(temp, 1000.0));
-    }
-  }
-  [[maybe_unused]] double final_result = compute_load.load();
+  // std::atomic<double> compute_load{0.0};
+  // double temp = 0.0;
+  // double val = 0.0;
+  // for (int iter = 0; iter < 100000; iter++) {
+  //   val = static_cast<double>(iter);
+  //   compute_load.store(compute_load.load() + (std::sin(val * 0.0001) * std::cos(val * 0.0001)));
+  //   if (iter % 1000 == 0) {
+  //     temp = compute_load.load();
+  //     compute_load.store(std::fmod(temp, 1000.0));
+  //   }
+  // }
+  // [[maybe_unused]] double final_result = compute_load.load();
   return true;
 }
 
