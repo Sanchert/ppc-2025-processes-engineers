@@ -2,6 +2,7 @@
 #include <stb/stb_image.h>
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <tuple>
@@ -36,7 +37,7 @@ class KolotukhinAHypercubeFuncTests : public ppc::util::BaseRunFuncTests<InType,
         if (tt.msg.data_size != output_data.data.size()) {
           return false;
         }
-        for (size_t i = 0; i < tt.msg.data_size; i++) {
+        for (std::size_t i = 0; i < tt.msg.data_size; i++) {
           if (output_data.data[i] != tt.data[i]) {
             return false;
           }

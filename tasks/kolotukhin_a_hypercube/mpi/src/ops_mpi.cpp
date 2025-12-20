@@ -2,26 +2,24 @@
 
 #include <mpi.h>
 
-#include <algorithm>
 #include <atomic>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
-#include <numeric>
 #include <vector>
 
 #include "kolotukhin_a_hypercube/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace kolotukhin_a_hypercube {
 
-KolotukhinAHypercubeMPI::KolotukhinAHypercubeMPI(const InType &in) {
+KolotukhinAHypercubeMPI::KolotukhinAHypercubeMPI(const InType &in)  : exec_(true){
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput().data = std::vector<int>{};
   GetOutput().process_id = -1;
   GetOutput().exec = true;
-  exec_ = true;
 }
+
 int KolotukhinAHypercubeMPI::GetNeighbor(int rank, int dim) {
   int neighbor = rank ^ (1 << dim);
   return neighbor;
@@ -37,19 +35,18 @@ int KolotukhinAHypercubeMPI::CalculateHypercubeDimension(int num_processes) {
 }
 
 void KolotukhinAHypercubeMPI::PerformComputeLoad(int iterations) {
-  volatile std::atomic<double> compute_load{0.0};
+  std::atomic<double> compute_load{0.0};
   double temp = 0.0;
   double val = 0.0;
   for (int iter = 0; iter < iterations; iter++) {
     val = static_cast<double>(iter);
-    compute_load.store(compute_load.load() + std::sin(val * 0.0001) * std::cos(val * 0.0001));
+    compute_load.store(compute_load.load() + (std::sin(val * 0.0001) * std::cos(val * 0.0001)));
     if (iter % 1000 == 0) {
       temp = compute_load.load();
       compute_load.store(std::fmod(temp, 1000.0));
     }
   }
-  double final_result = compute_load.load();
-  (void)final_result;
+  [[maybe_unused]] double final_result = compute_load.load();
 }
 
 bool KolotukhinAHypercubeMPI::ValidationImpl() {
@@ -74,7 +71,9 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
   if (!exec_) {
-    GetOutput() = {{}, -1, exec_};
+    GetOutput().data.clear;
+    GetOutput().process_id = -1;
+    GetOutput().exec = exec_;
     return true;
   }
 
@@ -91,12 +90,14 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
     data_size = static_cast<std::uint64_t>(GetInput().data_size);
     data.resize(data_size);
     for (size_t i = 0; i < data_size; i++) {
-      data[i] = static_cast<int>(i) * 2 + 1;
+      data[i] = (static_cast<int>(i) * 2) + 1;
     }
   }
 
   if (source == dest) {
-    GetOutput() = {data, rank, exec_};
+    GetOutput().data = data;
+    GetOutput().process_id = rank;
+    GetOutput().exec = exec_;
     return true;
   }
 
@@ -106,7 +107,7 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   int xor_val = source ^ dest;
   for (int dim = 0; dim < dimensions; dim++) {
     int mask = 1 << dim;
-    if (xor_val & mask) {
+    if ((xor_val & mask) != 0) {
       current = current ^ mask;
       path.push_back(current);
       if (current == dest) {
@@ -162,7 +163,9 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
     }
   }
 
-  GetOutput() = {data, rank, exec_};
+  GetOutput().data = data;
+  GetOutput().process_id = rank; 
+  GetOutput().exec = exec_;
   MPI_Barrier(MPI_COMM_WORLD);
   return true;
 }

@@ -18,9 +18,9 @@ class KolotukhinAHypercubeMPI : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  int CalculateHypercubeDimension(int num_proc);
-  int GetNeighbor(int rank, int dim);
-  void PerformComputeLoad(int iterations);
+  static int CalculateHypercubeDimension(int num_proc);
+  static int GetNeighbor(int rank, int dim);
+  static void PerformComputeLoad(int iterations);
 
   bool exec_ = true;
 };
