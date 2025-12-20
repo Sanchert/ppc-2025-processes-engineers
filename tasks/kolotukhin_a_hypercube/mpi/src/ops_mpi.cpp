@@ -58,10 +58,10 @@ void KolotukhinAHypercubeMPI::SendData(std::vector<int> &data, int next_neighbor
 }
 
 void KolotukhinAHypercubeMPI::RecvData(std::vector<int> &data, int prev_neighbor) {
-  std::uint64_t data_size = data.size();
+  std::uint64_t data_size = 0;
   MPI_Recv(&data_size, 1, MPI_UINT64_T, prev_neighbor, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  data.resize(data_size);
   if (data_size > 0) {
-    data.resize(data_size);
     MPI_Recv(data.data(), static_cast<int>(data_size), MPI_INT, prev_neighbor, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   }
 }
@@ -106,6 +106,7 @@ bool KolotukhinAHypercubeMPI::ValidationImpl() {
       ((GetInput().dest < 0) && (GetInput().dest != -2)) || (GetInput().dest > world_size - 1) || (world_size <= 0) ||
       ((world_size & (world_size - 1)) != 0)) {
     exec_ = false;
+    // std::cout << "[ERR VALID]" << std::endl;
   }
   return true;
 }
@@ -125,6 +126,7 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
     GetOutput().data.clear();
     GetOutput().process_id = -1;
     GetOutput().exec = exec_;
+    MPI_Barrier(MPI_COMM_WORLD);
     return true;
   }
 
@@ -156,29 +158,42 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   }
 
   std::vector<int> path = CalcPath(source, dest, dimensions);
-
+  if (path.back() != dest) {
+    GetOutput().data.clear();
+    GetOutput().process_id = -1;
+    GetOutput().exec = exec_;
+    MPI_Barrier(MPI_COMM_WORLD);
+    // std::cout << "[ERR PATH]" << std::endl;
+    return false;
+  }
   int my_position = -1;
   int prev_neighbor = -1;
   int next_neighbor = -1;
   CalcPositions(rank, path, my_position, next_neighbor, prev_neighbor);
 
-  if (my_position >= 0) {
-    if (rank == source) {
-      // PerformComputeLoad(150000);
-      SendData(data, next_neighbor);
-    } else if (rank == dest) {
-      RecvData(data, prev_neighbor);
-      // PerformComputeLoad(150000);
-    } else {
-      RecvData(data, prev_neighbor);
-      // PerformComputeLoad(150000);
-      SendData(data, next_neighbor);
-    }
+  // if (my_position >= 0) {
+  if (rank == source) {
+    // PerformComputeLoad(150000);
+    SendData(data, next_neighbor);
+  } else if (rank == dest) {
+    RecvData(data, prev_neighbor);
+    // PerformComputeLoad(150000);
+  } else {
+    RecvData(data, prev_neighbor);
+    // PerformComputeLoad(150000);
+    SendData(data, next_neighbor);
+    data.clear();
   }
+  // }
 
-  GetOutput().data = data;
+  if (rank == dest || rank == source) {
+    GetOutput().data = data;
+  } else {
+    GetOutput().data = std::vector<int>();
+  }
   GetOutput().process_id = rank;
   GetOutput().exec = exec_;
+  // std::cout << "[PROCESS] #" << GetOutput().process_id << "  has data = " << GetOutput().data.size() <<std::endl;
   MPI_Barrier(MPI_COMM_WORLD);
   return true;
 }
