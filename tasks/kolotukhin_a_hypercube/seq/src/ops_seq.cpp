@@ -26,7 +26,7 @@ bool KolotukhinAHypercubeSEQ::PreProcessingImpl() {
 
 bool KolotukhinAHypercubeSEQ::RunImpl() {
   std::size_t data_size = GetInput().data_size;
-  std::vector<int> data_to_send{};
+  std::vector<int> data_to_send(data_size);
   for (std::size_t i = 0; i < data_size; i++) {
     data_to_send.push_back((static_cast<int>(i) * 2) + 1);
   }
