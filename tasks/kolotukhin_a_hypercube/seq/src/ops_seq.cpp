@@ -53,13 +53,6 @@ KolotukhinAHypercubeSEQ::KolotukhinAHypercubeSEQ(const InType &in) {
 }
 
 bool KolotukhinAHypercubeSEQ::ValidationImpl() {
-  int world_size = 0;
-  MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-  if ((world_size <= 0) || ((world_size & (world_size - 1)) != 0) || (GetInput().source < 0) ||
-      (GetInput().source > world_size - 1)) {
-    valid_ = false;
-    GetOutput() = {std::vector<int>{}, -1, valid_};
-  }
   return true;
 }
 
@@ -70,12 +63,18 @@ bool KolotukhinAHypercubeSEQ::PreProcessingImpl() {
 }
 
 bool KolotukhinAHypercubeSEQ::RunImpl() {
+  int world_size = 0;
+  MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+  if ((world_size <= 0) || ((world_size & (world_size - 1)) != 0) || (GetInput().source < 0) ||
+      (GetInput().source > world_size - 1)) {
+    valid_ = false;
+    GetOutput() = {std::vector<int>{}, -1, valid_};
+  }
+  
   if (valid_) {
     int world_rank = 0;
-    int world_size = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-
+  
     const auto &input = GetInput();
     int source = input.source;
     int dest = input.dest;
