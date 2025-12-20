@@ -1,4 +1,5 @@
 #pragma once
+#include <mpi.h>
 
 #include "kolotukhin_a_hypercube/common/include/common.hpp"
 #include "task/include/task.hpp"
@@ -17,6 +18,12 @@ class KolotukhinAHypercubeSEQ : public BaseTask {
   bool PreProcessingImpl() override;
   bool RunImpl() override;
   bool PostProcessingImpl() override;
+
+  int CalculateHypercubeDimension(int num_processes);
+  void PerformComputeLoad(int iterations);
+  MPI_Comm CreateHypercubeComm(int dims);
+  MPI_Comm hypercube_comm_ = MPI_COMM_NULL;
+  bool valid_ = true;
 };
 
 }  // namespace kolotukhin_a_hypercube
