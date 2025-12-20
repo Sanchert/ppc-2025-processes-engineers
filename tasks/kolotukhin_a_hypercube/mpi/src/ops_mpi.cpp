@@ -171,20 +171,18 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   int next_neighbor = -1;
   CalcPositions(rank, path, my_position, next_neighbor, prev_neighbor);
 
-  // if (my_position >= 0) {
   if (rank == source) {
-    // PerformComputeLoad(150000);
+    PerformComputeLoad(150000);
     SendData(data, next_neighbor);
   } else if (rank == dest) {
     RecvData(data, prev_neighbor);
-    // PerformComputeLoad(150000);
+    PerformComputeLoad(150000);
   } else {
     RecvData(data, prev_neighbor);
-    // PerformComputeLoad(150000);
+    PerformComputeLoad(150000);
     SendData(data, next_neighbor);
     data.clear();
   }
-  // }
 
   if (rank == dest || rank == source) {
     GetOutput().data = data;
@@ -193,7 +191,6 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   }
   GetOutput().process_id = rank;
   GetOutput().exec = exec_;
-  // std::cout << "[PROCESS] #" << GetOutput().process_id << "  has data = " << GetOutput().data.size() <<std::endl;
   MPI_Barrier(MPI_COMM_WORLD);
   return true;
 }
