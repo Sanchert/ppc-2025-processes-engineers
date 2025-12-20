@@ -1,9 +1,6 @@
 #include "kolotukhin_a_hypercube/seq/include/ops_seq.hpp"
 
-#include <mpi.h>
-
 #include "kolotukhin_a_hypercube/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace kolotukhin_a_hypercube {
 

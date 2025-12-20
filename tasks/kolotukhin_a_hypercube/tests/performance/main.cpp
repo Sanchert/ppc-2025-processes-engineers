@@ -23,7 +23,6 @@ class KolotukhinAHypercubePerfTests : public ppc::util::BaseRunPerfTests<InType,
     if (output_data.exec) {
       if (output_data.process_id == input_data_.dest) {
         if (output_data.data.size() != kDataSize_) {
-          std::cout << "[SIZE]" << std::endl;
           return false;
         }
         for (std::size_t i = 0; i < kDataSize_; i++) {
