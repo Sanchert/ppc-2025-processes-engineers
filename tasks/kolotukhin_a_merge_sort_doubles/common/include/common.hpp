@@ -2,14 +2,15 @@
 
 #include <string>
 #include <tuple>
+#include <vector>
 
 #include "task/include/task.hpp"
 
 namespace kolotukhin_a_merge_sort_doubles {
 
-using InType = int;
-using OutType = int;
-using TestType = std::tuple<int, std::string>;
+using InType = std::vector<double>;
+using OutType = std::vector<double>;
+using TestType = std::tuple<std::vetcot<double>, std::string>;
 using BaseTask = ppc::task::Task<InType, OutType>;
 
 }  // namespace kolotukhin_a_merge_sort_doubles
