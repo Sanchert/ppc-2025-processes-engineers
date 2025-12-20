@@ -70,11 +70,11 @@ bool KolotukhinAHypercubeSEQ::RunImpl() {
     valid_ = false;
     GetOutput() = {std::vector<int>{}, -1, valid_};
   }
-  
+
   if (valid_) {
     int world_rank = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-  
+
     const auto &input = GetInput();
     int source = input.source;
     int dest = input.dest;
