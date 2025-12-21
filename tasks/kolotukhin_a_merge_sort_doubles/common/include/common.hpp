@@ -10,9 +10,7 @@ namespace kolotukhin_a_merge_sort_doubles {
 
 using InType = std::vector<double>;
 using OutType = std::vector<double>;
-using TestType =
-    std::tuple<std::tuple<std::vector<double>, std::vector<double>>,
-               std::string>;  // Изменено: пара (пара(вход, ожидаемый_выход), название теста для уникальности в системе)
+using TestType = std::tuple<std::tuple<std::vector<double>, std::vector<double>>, std::string>;
 using BaseTask = ppc::task::Task<InType, OutType>;
 
 }  // namespace kolotukhin_a_merge_sort_doubles
