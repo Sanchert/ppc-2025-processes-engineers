@@ -10,8 +10,19 @@
 namespace kolotukhin_a_merge_sort_doubles {
 
 class KolotukhinAMergeSortDoublesPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
+  std::size_t kCount_ = 100000;
   void SetUp() override {
-    GenerateTestData();
+    test_data_.resize(kCount_);
+    for (std::size_t i = 0; i < kCount_; ++i) {
+      double value = static_cast<double>(kCount_ - i);
+      if (i % 3 == 0) {
+        value = -value;
+      }
+      if (i % 7 == 0) {
+        value += 0.25;
+      }
+      test_data_[i] = value;
+    }
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
@@ -27,20 +38,6 @@ class KolotukhinAMergeSortDoublesPerfTests : public ppc::util::BaseRunPerfTests<
     return test_data_;
   }
   private:
-  void GenerateTestData() {
-    const std::size_t data_size = 1000000;
-    test_data_.resize(data_size);
-    for (std::size_t i = 0; i < data_size; ++i) {
-      double value = static_cast<double>(data_size - i);
-      if (i % 3 == 0) {
-        value = -value;
-      }
-      if (i % 7 == 0) {
-        value += 0.25;
-      }
-      test_data_[i] = value;
-    }
-  }
   
   InType test_data_;
 };
