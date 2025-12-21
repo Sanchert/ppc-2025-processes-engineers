@@ -2,7 +2,6 @@
 
 #include <array>
 #include <cstddef>
-#include <cstdint>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -11,7 +10,6 @@
 #include "kolotukhin_a_merge_sort_doubles/mpi/include/ops_mpi.hpp"
 #include "kolotukhin_a_merge_sort_doubles/seq/include/ops_seq.hpp"
 #include "util/include/func_test_util.hpp"
-#include "util/include/util.hpp"
 
 namespace kolotukhin_a_merge_sort_doubles {
 
@@ -30,17 +28,13 @@ class KolotukhinAMergeSortDoublesFuncTests : public ppc::util::BaseRunFuncTests<
 
   bool CheckTestOutputData(OutType &output_data) final {
     if (output_data.size() != expected_output_.size()) {
-      // std::cout << "[SIZE_ERR]" << std::endl;
       return false;
     }
-    
     for (std::size_t i = 0; i < output_data.size(); ++i) {
       if (std::abs(output_data[i] - expected_output_[i]) > 1e-12) {
-        // std::cout << "[VALUE_ERR]" << std::endl;
         return false;
       }
     }
-    
     return true;
   }
 
@@ -70,16 +64,16 @@ const std::array<TestType, 6> kTestParam = {
   
   std::make_tuple(
     std::make_tuple(
-      std::vector<double>{-5.0, -3.0, -1.0, 0.0, 1.0, 3.0, 5.0},
-      std::vector<double>{-5.0, -3.0, -1.0, 0.0, 1.0, 3.0, 5.0}
+      std::vector<double>{-5.07, -3.3, -1.12, 0.4, 1.111, 3.0, 5.25},
+      std::vector<double>{-5.07, -3.3, -1.12, 0.4, 1.111, 3.0, 5.25}
     ),
     "sorted_array"
   ),
   
   std::make_tuple(
     std::make_tuple(
-      std::vector<double>{5.0, 3.0, 1.0, 0.0, -1.0, -3.0, -5.0},
-      std::vector<double>{-5.0, -3.0, -1.0, 0.0, 1.0, 3.0, 5.0}
+      std::vector<double>{5.0, 3.4, 1.5, 0.0, -1.0, -3.01, -5.0},
+      std::vector<double>{-5.0, -3.01, -1.0, 0.0, 1.5, 3.4, 5.0}
     ),
     "reversed_array"
   ),
