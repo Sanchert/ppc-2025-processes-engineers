@@ -22,7 +22,7 @@ class KolotukhinAHypercubeMPI : public BaseTask {
 
   int CalculateHypercubeDimension(int num_proc);
   int GetNeighbor(int rank, int dim);
-  // static void PerformComputeLoad(int iterations);
+  void PerformComputeLoad(int iterations);
   void SendData(std::vector<int> &data, int next_neighbor);
   void RecvData(std::vector<int> &data, int prev_neighbor);
   void CalcPositions(int my_rank, std::vector<int> &path, int &my_pos, int &next, int &prev);

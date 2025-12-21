@@ -2,10 +2,7 @@
 
 #include <mpi.h>
 
-#include <atomic>
-#include <cmath>
 #include <cstddef>
-#include <cstdint>
 #include <vector>
 
 #include "kolotukhin_a_hypercube/common/include/common.hpp"
@@ -36,20 +33,15 @@ int KolotukhinAHypercubeMPI::CalculateHypercubeDimension(int num_processes) {
   return dimension;
 }
 
-// void KolotukhinAHypercubeMPI::PerformComputeLoad(int iterations) {
-//   std::atomic<double> compute_load{0.0};
-//   double temp = 0.0;
-//   double val = 0.0;
-//   for (int iter = 0; iter < iterations; iter++) {
-//     val = static_cast<double>(iter);
-//     compute_load.store(compute_load.load() + (std::sin(val * 0.0001) * std::cos(val * 0.0001)));
-//     if (iter % 1000 == 0) {
-//       temp = compute_load.load();
-//       compute_load.store(std::fmod(temp, 1000.0));
-//     }
-//   }
-//   [[maybe_unused]] double final_result = compute_load.load();
-// }
+void KolotukhinAHypercubeMPI::PerformComputeLoad(int iterations) {
+  volatile int dummy = 0;
+  for (int i = 0; i < iterations; i++) {
+    dummy += (i * 3) / 7;
+    dummy ^= (i << 3);
+    dummy = dummy % 10007;
+  }
+  [[maybe_unused]] int final_value = dummy;
+}
 
 void KolotukhinAHypercubeMPI::SendData(std::vector<int> &data, int next_neighbor) {
   int data_size = static_cast<int>(data.size());
@@ -157,16 +149,16 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   CalcPositions(rank, path, my_position, next_neighbor, prev_neighbor);
   if (my_position != -1) {
     if (rank == source) {
-      // PerformComputeLoad(150000);
+      PerformComputeLoad(150000);
       SendData(data, next_neighbor);
     } else if (rank == dest) {
       RecvData(data, prev_neighbor);
       data_size = data.size();
-      // PerformComputeLoad(150000);
+      PerformComputeLoad(150000);
     } else {
       RecvData(data, prev_neighbor);
       data_size = data.size();
-      // PerformComputeLoad(150000);
+      PerformComputeLoad(150000);
       SendData(data, next_neighbor);
     }
   }
