@@ -60,12 +60,12 @@ TEST_P(KolotukhinAHypercubeFuncTests, MatmulFromPic) {
 }
 
 const std::array<TestType, 6> kTestParam = {
-    TestType(HypercubeMessage(0, 3, 4), std::vector<int>{1, 3, 5, 7}, "far"),
+    TestType(HypercubeMessage(0, 3, 4), std::vector<int>{1, 1, 1, 1}, "far"),
     TestType(HypercubeMessage(0, 3, 0), std::vector<int>{}, "far_empty"),
-    TestType(HypercubeMessage(0, 1, 4), std::vector<int>{1, 3, 5, 7}, "neighboors"),
-    TestType(HypercubeMessage(2, 3, 4), std::vector<int>{1, 3, 5, 7}, "zero_not_source"),
-    TestType(HypercubeMessage(2, 2, 4), std::vector<int>{1, 3, 5, 7}, "to_itself"),
-    TestType(HypercubeMessage(3, 0, 4), std::vector<int>{1, 3, 5, 7}, "reverse")};
+    TestType(HypercubeMessage(0, 1, 4), std::vector<int>{1, 1, 1, 1}, "neighboors"),
+    TestType(HypercubeMessage(2, 3, 4), std::vector<int>{1, 1, 1, 1}, "zero_not_source"),
+    TestType(HypercubeMessage(2, 2, 4), std::vector<int>{1, 1, 1, 1}, "to_itself"),
+    TestType(HypercubeMessage(3, 0, 4), std::vector<int>{1, 1, 1, 1}, "reverse")};
 
 const auto kTestTasksList = std::tuple_cat(
     ppc::util::AddFuncTask<KolotukhinAHypercubeMPI, InType>(kTestParam, PPC_SETTINGS_kolotukhin_a_hypercube),

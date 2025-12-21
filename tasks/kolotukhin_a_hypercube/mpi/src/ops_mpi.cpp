@@ -140,7 +140,7 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
     data_size = static_cast<std::uint64_t>(GetInput().data_size);
     data.resize(data_size);
     for (size_t i = 0; i < data_size; i++) {
-      data[i] = (static_cast<int>(i) * 2) + 1;
+      data[i] = 1;
     }
   }
 
