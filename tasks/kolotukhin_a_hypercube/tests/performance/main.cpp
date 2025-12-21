@@ -29,7 +29,12 @@ class KolotukhinAHypercubePerfTests : public ppc::util::BaseRunPerfTests<InType,
             return false;
           }
         }
+        std::cout << "[DONE] #" << output_data.process_id << std::endl;
+      } else {
+        std::cout << "[NOT CHECK] #" << output_data.process_id << std::endl;
       }
+    } else {
+      std::cout << "[NOT VALID] #" << output_data.process_id << std::endl;
     }
     return true;
   }

@@ -187,6 +187,9 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   } else {
     GetOutput().data = std::vector<int>();
   }
+  if (rank == world_size - 1) {
+    rank = -2;
+  }
   GetOutput().process_id = rank;
   GetOutput().exec = exec_;
   MPI_Barrier(MPI_COMM_WORLD);
