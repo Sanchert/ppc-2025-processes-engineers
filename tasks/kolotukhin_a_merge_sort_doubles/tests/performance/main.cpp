@@ -37,8 +37,8 @@ class KolotukhinAMergeSortDoublesPerfTests : public ppc::util::BaseRunPerfTests<
   InType GetTestInputData() final {
     return test_data_;
   }
-  private:
-  
+
+ private:
   InType test_data_;
 };
 
@@ -47,7 +47,8 @@ TEST_P(KolotukhinAMergeSortDoublesPerfTests, RunPerfModes) {
 }
 
 const auto kAllPerfTasks =
-    ppc::util::MakeAllPerfTasks<InType, KolotukhinAMergeSortDoublesMPI, KolotukhinAMergeSortDoublesSEQ>(PPC_SETTINGS_kolotukhin_a_merge_sort_doubles);
+    ppc::util::MakeAllPerfTasks<InType, KolotukhinAMergeSortDoublesMPI, KolotukhinAMergeSortDoublesSEQ>(
+        PPC_SETTINGS_kolotukhin_a_merge_sort_doubles);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 

@@ -24,7 +24,7 @@ bool KolotukhinAMergeSortDoublesSEQ::PreProcessingImpl() {
 }
 
 bool KolotukhinAMergeSortDoublesSEQ::RunImpl() {
-  const auto& input = GetInput();
+  const auto &input = GetInput();
   GetOutput().resize(GetInput().size());
   if (input.empty()) {
     GetOutput() = input;

@@ -54,64 +54,36 @@ TEST_P(KolotukhinAMergeSortDoublesFuncTests, DoubleSort) {
 }
 
 const std::array<TestType, 6> kTestParam = {
-  std::make_tuple(
-    std::make_tuple(
-      std::vector<double>{3.5, -2.1, 0.0, 1.1, -3.3, 2.2, -1.4, 5.6},
-      std::vector<double>{-3.3, -2.1, -1.4, 0.0, 1.1, 2.2, 3.5, 5.6}
-    ),
-    "common_test"
-  ),
-  
-  std::make_tuple(
-    std::make_tuple(
-      std::vector<double>{-5.07, -3.3, -1.12, 0.4, 1.111, 3.0, 5.25},
-      std::vector<double>{-5.07, -3.3, -1.12, 0.4, 1.111, 3.0, 5.25}
-    ),
-    "sorted_array"
-  ),
-  
-  std::make_tuple(
-    std::make_tuple(
-      std::vector<double>{5.0, 3.4, 1.5, 0.0, -1.0, -3.01, -5.0},
-      std::vector<double>{-5.0, -3.01, -1.0, 0.0, 1.5, 3.4, 5.0}
-    ),
-    "reversed_array"
-  ),
-  
-  std::make_tuple(
-    std::make_tuple(
-      std::vector<double>{1.0, 1.0, 1.0, 1.0, 1.0},
-      std::vector<double>{1.0, 1.0, 1.0, 1.0, 1.0}
-    ),
-    "all_elements_are_equal"
-  ),
-  
-  std::make_tuple(
-    std::make_tuple(
-      std::vector<double>{}, 
-      std::vector<double>{}
-    ),
-    "empty_array"
-  ),
+    std::make_tuple(std::make_tuple(std::vector<double>{3.5, -2.1, 0.0, 1.1, -3.3, 2.2, -1.4, 5.6},
+                                    std::vector<double>{-3.3, -2.1, -1.4, 0.0, 1.1, 2.2, 3.5, 5.6}),
+                    "common_test"),
 
-  std::make_tuple(
+    std::make_tuple(std::make_tuple(std::vector<double>{-5.07, -3.3, -1.12, 0.4, 1.111, 3.0, 5.25},
+                                    std::vector<double>{-5.07, -3.3, -1.12, 0.4, 1.111, 3.0, 5.25}),
+                    "sorted_array"),
+
+    std::make_tuple(std::make_tuple(std::vector<double>{5.0, 3.4, 1.5, 0.0, -1.0, -3.01, -5.0},
+                                    std::vector<double>{-5.0, -3.01, -1.0, 0.0, 1.5, 3.4, 5.0}),
+                    "reversed_array"),
+
     std::make_tuple(
-      std::vector<double>{42.0}, 
-      std::vector<double>{42.0}
-    ),
-    "single_element"
-  )
-};
+        std::make_tuple(std::vector<double>{1.0, 1.0, 1.0, 1.0, 1.0}, std::vector<double>{1.0, 1.0, 1.0, 1.0, 1.0}),
+        "all_elements_are_equal"),
+
+    std::make_tuple(std::make_tuple(std::vector<double>{}, std::vector<double>{}), "empty_array"),
+
+    std::make_tuple(std::make_tuple(std::vector<double>{42.0}, std::vector<double>{42.0}), "single_element")};
 
 const auto kTestTasksList =
     std::tuple_cat(ppc::util::AddFuncTask<kolotukhin_a_merge_sort_doubles::KolotukhinAMergeSortDoublesMPI, InType>(
-                    kTestParam, PPC_SETTINGS_kolotukhin_a_merge_sort_doubles),
+                       kTestParam, PPC_SETTINGS_kolotukhin_a_merge_sort_doubles),
                    ppc::util::AddFuncTask<kolotukhin_a_merge_sort_doubles::KolotukhinAMergeSortDoublesSEQ, InType>(
-                    kTestParam, PPC_SETTINGS_kolotukhin_a_merge_sort_doubles));
+                       kTestParam, PPC_SETTINGS_kolotukhin_a_merge_sort_doubles));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
-const auto kPerfTestName = KolotukhinAMergeSortDoublesFuncTests::PrintFuncTestName<KolotukhinAMergeSortDoublesFuncTests>;
+const auto kPerfTestName =
+    KolotukhinAMergeSortDoublesFuncTests::PrintFuncTestName<KolotukhinAMergeSortDoublesFuncTests>;
 
 INSTANTIATE_TEST_SUITE_P(DoubleSortTests, KolotukhinAMergeSortDoublesFuncTests, kGtestValues, kPerfTestName);
 
