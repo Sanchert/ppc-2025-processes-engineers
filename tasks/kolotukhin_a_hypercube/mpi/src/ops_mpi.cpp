@@ -158,21 +158,24 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   int prev_neighbor = -1;
   int next_neighbor = -1;
   CalcPositions(rank, path, my_position, next_neighbor, prev_neighbor);
-
-  if (rank == source) {
-    PerformComputeLoad(150000);
-    SendData(data, next_neighbor);
-  } else if (rank == dest) {
-    RecvData(data, prev_neighbor);
-    data_size = data.size();
-    PerformComputeLoad(150000);
-  } else {
-    RecvData(data, prev_neighbor);
-    PerformComputeLoad(150000);
-    SendData(data, next_neighbor);
+  if (my_position != -1) {
+    if (rank == source) {
+      PerformComputeLoad(150000);
+      SendData(data, next_neighbor);
+    } else if (rank == dest) {
+      RecvData(data, prev_neighbor);
+      data_size = data.size();
+      PerformComputeLoad(150000);
+    } else {
+      RecvData(data, prev_neighbor);
+      data_size = data.size();
+      PerformComputeLoad(150000);
+      SendData(data, next_neighbor);
+    }
   }
 
   MPI_Bcast(&data_size, 1, MPI_UINT64_T, dest, MPI_COMM_WORLD);
+
   if (my_position == -1) {
     data.resize(data_size);
   }
