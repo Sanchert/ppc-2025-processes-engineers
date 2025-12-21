@@ -67,7 +67,7 @@ void KolotukhinAHypercubeMPI::RecvData(std::vector<int> &data, int prev_neighbor
 }
 
 void KolotukhinAHypercubeMPI::CalcPositions(int my_rank, std::vector<int> &path, int &my_pos, int &next, int &prev) {
-  for (size_t i = 0; i < path.size(); i++) {
+  for (std::size_t i = 0; i < path.size(); i++) {
     if (my_rank == path[i]) {
       my_pos = static_cast<int>(i);
       if (i > 0) {
@@ -106,7 +106,6 @@ bool KolotukhinAHypercubeMPI::ValidationImpl() {
       ((GetInput().dest < 0) && (GetInput().dest != -2)) || (GetInput().dest > world_size - 1) || (world_size <= 0) ||
       ((world_size & (world_size - 1)) != 0)) {
     exec_ = false;
-    // std::cout << "[ERR VALID]" << std::endl;
   }
   return true;
 }
@@ -163,7 +162,6 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
     GetOutput().process_id = -1;
     GetOutput().exec = exec_;
     MPI_Barrier(MPI_COMM_WORLD);
-    // std::cout << "[ERR PATH]" << std::endl;
     return false;
   }
   int my_position = -1;

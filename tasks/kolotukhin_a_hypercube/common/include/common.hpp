@@ -23,7 +23,7 @@ struct TT {
 struct Out {
   std::vector<int> data;
   int process_id = 0;
-  bool exec = false;
+  bool exec = true;
 };
 
 using InType = HypercubeMessage;
