@@ -23,36 +23,28 @@ namespace kolotukhin_a_merge_sort_doubles {
 class KolotukhinAMergeSortDoublesFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
-    return std::to_string(std::get<0>(test_param)) + "_" + std::get<1>(test_param);
+    return "size_" + std::get<1>(test_param);
   }
 
  protected:
   void SetUp() override {
-    int width = -1;
-    int height = -1;
-    int channels = -1;
-    std::vector<uint8_t> img;
-    // Read image in RGB to ensure consistent channel count
-    {
-      std::string abs_path = ppc::util::GetAbsoluteTaskPath(PPC_ID_kolotukhin_a_merge_sort_doubles, "pic.jpg");
-      auto *data = stbi_load(abs_path.c_str(), &width, &height, &channels, STBI_rgb);
-      if (data == nullptr) {
-        throw std::runtime_error("Failed to load image: " + std::string(stbi_failure_reason()));
-      }
-      channels = STBI_rgb;
-      img = std::vector<uint8_t>(data, data + (static_cast<ptrdiff_t>(width * height * channels)));
-      stbi_image_free(data);
-      if (std::cmp_not_equal(width, height)) {
-        throw std::runtime_error("width != height: ");
-      }
-    }
-
-    TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    input_data_ = width - height + std::min(std::accumulate(img.begin(), img.end(), 0), channels);
+    auto params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    input_data_ = std::get<0>(std::get<0>(params));
+    expected_output_ = std::get<1>(std::get<0>(params));
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    return (input_data_ == output_data);
+    if (output_data.size() != expected_output_.size()) {
+      return false;
+    }
+    
+    for (size_t i = 0; i < output_data.size(); ++i) {
+      if (std::abs(output_data[i] - expected_output_[i]) > 1e-12) {
+        return false;
+      }
+    }
+    
+    return true;
   }
 
   InType GetTestInputData() final {
@@ -60,26 +52,77 @@ class KolotukhinAMergeSortDoublesFuncTests : public ppc::util::BaseRunFuncTests<
   }
 
  private:
-  InType input_data_ = 0;
+  InType input_data_{};
+  std::vector<double> expected_output_{};
 };
 
 namespace {
 
-TEST_P(KolotukhinAMergeSortDoublesFuncTests, MatmulFromPic) {
+TEST_P(KolotukhinAMergeSortDoublesFuncTests, DoubleSort) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 3> kTestParam = {std::make_tuple(3, "3"), std::make_tuple(5, "5"), std::make_tuple(7, "7")};
+const std::array<TestType, 6> kTestParam = {
+  std::make_tuple(
+    std::make_tuple(
+      std::vector<double>{3.5, -2.1, 0.0, 1.1, -3.3, 2.2, -1.4, 5.6},
+      std::vector<double>{-3.3, -2.1, -1.4, 0.0, 1.1, 2.2, 3.5, 5.6}
+    ),
+    "common_test"
+  ),
+  
+  std::make_tuple(
+    std::make_tuple(
+      std::vector<double>{-5.0, -3.0, -1.0, 0.0, 1.0, 3.0, 5.0},
+      std::vector<double>{-5.0, -3.0, -1.0, 0.0, 1.0, 3.0, 5.0}
+    ),
+    "sorted_array"
+  ),
+  
+  std::make_tuple(
+    std::make_tuple(
+      std::vector<double>{5.0, 3.0, 1.0, 0.0, -1.0, -3.0, -5.0},
+      std::vector<double>{-5.0, -3.0, -1.0, 0.0, 1.0, 3.0, 5.0}
+    ),
+    "reversed_array"
+  ),
+  
+  std::make_tuple(
+    std::make_tuple(
+      std::vector<double>{1.0, 1.0, 1.0, 1.0, 1.0},
+      std::vector<double>{1.0, 1.0, 1.0, 1.0, 1.0}
+    ),
+    "all_elements_are_equal"
+  ),
+  
+  std::make_tuple(
+    std::make_tuple(
+      std::vector<double>{}, 
+      std::vector<double>{}
+    ),
+    "empty_array"
+  ),
+
+  std::make_tuple(
+    std::make_tuple(
+      std::vector<double>{42.0}, 
+      std::vector<double>{42.0}
+    ),
+    "single_element"
+  )
+};
 
 const auto kTestTasksList =
-    std::tuple_cat(ppc::util::AddFuncTask<KolotukhinAMergeSortDoublesMPI, InType>(kTestParam, PPC_SETTINGS_kolotukhin_a_merge_sort_doubles),
-                   ppc::util::AddFuncTask<KolotukhinAMergeSortDoublesSEQ, InType>(kTestParam, PPC_SETTINGS_kolotukhin_a_merge_sort_doubles));
+    std::tuple_cat(ppc::util::AddFuncTask<kolotukhin_a_merge_sort_doubles::KolotukhinAMergeSortDoublesMPI, InType>(
+                    kTestParam, PPC_SETTINGS_kolotukhin_a_merge_sort_doubles),
+                   ppc::util::AddFuncTask<kolotukhin_a_merge_sort_doubles::KolotukhinAMergeSortDoublesSEQ, InType>(
+                    kTestParam, PPC_SETTINGS_kolotukhin_a_merge_sort_doubles));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
 const auto kPerfTestName = KolotukhinAMergeSortDoublesFuncTests::PrintFuncTestName<KolotukhinAMergeSortDoublesFuncTests>;
 
-INSTANTIATE_TEST_SUITE_P(PicMatrixTests, KolotukhinAMergeSortDoublesFuncTests, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(DoubleSortTests, KolotukhinAMergeSortDoublesFuncTests, kGtestValues, kPerfTestName);
 
 }  // namespace
 
