@@ -22,7 +22,7 @@
 - `exec` (логическое значение) — флаг требования проверки выполнения (не проверяется работа топологии для SEQ-версии)
 
 **Ограничения:**
-- Количество процессов `world_size` должно быть строго степенью двойки
+- Количество процессов `world_size` может не быть степенью двойки
 - Номера процессов `source` и `dest` должны быть в допустимом диапазоне: `0 <= source < world_size` и  `0 <= dest < world_size`
 
 ## 3. Базовый алгоритм (вычисление пути)
@@ -42,6 +42,7 @@
 1. Вычисление размерности гиперкуба по числу процессов
 2. Определение кратчайшего пути от source к dest через XOR битов
 3. Последовательная передача данных по найденному пути
+4. процесс-получатель передает всем процессам полученные данные.
 
 ```cpp
 int current = source;
@@ -49,7 +50,7 @@ path.push_back(current);
 int xor_val = source ^ dest;
 for (int dim = 0; dim < dimensions; dim++) {
   int mask = 1 << dim;
-  if (xor_val & mask) {
+  if ((xor_val & mask) != 0) {
     current = current ^ mask;
     path.push_back(current);
     if (current == dest) {
@@ -66,15 +67,16 @@ for (int dim = 0; dim < dimensions; dim++) {
 - Каждый процесс представляет один узел гиперкуба.
 
 **Роли процессов:**
-- **Источник (`source`)**: генерирует вектор данных заданного размера (элементы `2 * i + 1`) и начинает передачу по вычисленному пути
+- **Источник (`source`)**: генерирует вектор данных заданного размера (элементы `1`) и начинает передачу по вычисленному пути
 - **Промежуточные узлы  (процессы на пути, исключая `source` и `dest`)**: получают данные, пересылают следующему узлу
-- **Получатель (`dest`)**: принимает финальные данные, сохраняет их в ыходную структуру
-- **Остальные процессы**: не участвуют в передаче
+- **Получатель (`dest`)**: принимает финальные данные
+- **Остальные процессы**: примут данные, когда они будут у процесса-получателя
 
 **Коммуникация:**
 - Каждый процесс независимо вычисляет кратчайший путь от `source` к `dest`, используя только их ранги и общее количество процессов
 - Процесс определяет свое положение на пути (предыдущий и следующий сосед)
-- Передача данных осуществляется строго по этому пути с использованием парных операций `MPI_Send` и `MPI_Recv` в глобальном коммуникаторе `MPI_COMM_WORLD`.
+- Передача данных осуществляется строго по этому пути с использованием парных операций `MPI_Send` и `MPI_Recv` в глобальном коммуникаторе `MPI_COMM_WORLD`
+
 
 ## 5. Детали реализации
 Структура кода
@@ -93,7 +95,6 @@ kolotukhin_a_hypercube
     ├───seq
     │   ├───include
     │   │   └───ops_seq.hpp — Заголовочный файл последовательной версии программы
-    │   │
     │   └───src
     │       └───ops_seq.cpp — реализация последовательной версии
     └───tests
@@ -179,84 +180,65 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   const auto &input = GetInput();
   int source = input.source;
   int dest = input.dest;
+  if (dest == -2) {
+    dest = world_size - 1;
+  }
   std::vector<int> data{};
-  size_t data_size = 0;
+  std::uint64_t data_size = 0;
 
-  int dimensions = CalculateHypercubeDimension(world_size);
-
+  int dimensions = 0;
+  dimensions = CalculateHypercubeDimension(world_size);
   if (rank == source) {
-    data_size = GetInput().data_size;
+    data_size = static_cast<std::uint64_t>(GetInput().data_size);
     data.resize(data_size);
     for (size_t i = 0; i < data_size; i++) {
-      data[i] = static_cast<int>(i) * 2 + 1;
+      data[i] = 1;
     }
   }
 
   if (source == dest) {
-    GetOutput() = {data, rank, true};
+    GetOutput().process_id = rank;
+    GetOutput().exec = exec_;
+    MPI_Bcast(&data_size, 1, MPI_UINT64_T, dest, MPI_COMM_WORLD);
+    if (rank != dest) {
+      data.resize(data_size);
+    }
+    MPI_Bcast(data.data(), static_cast<int>(data_size), MPI_INT, dest, MPI_COMM_WORLD);
+    GetOutput().data = data;
     return true;
   }
 
-  std::vector<int> path;
-  int current = source;
-  path.push_back(current);
-  int xor_val = source ^ dest;
-  for (int dim = 0; dim < dimensions; dim++) {
-    int mask = 1 << dim;
-    if (xor_val & mask) {
-      current = current ^ mask;
-      path.push_back(current);
-      if (current == dest) {
-        break;
-      }
-    }
-  }
+  std::vector<int> path = CalcPath(source, dest, dimensions);
 
   int my_position = -1;
   int prev_neighbor = -1;
   int next_neighbor = -1;
+  CalcPositions(rank, path, my_position, next_neighbor, prev_neighbor);
 
-  for (size_t i = 0; i < path.size(); i++) {
-    if (rank == path[i]) {
-      my_position = static_cast<int>(i);
-      if (i > 0) {
-        prev_neighbor = path[i - 1];
-      }
-      if (i < path.size() - 1) {
-        next_neighbor = path[i + 1];
-      }
-      break;
-    }
-  }
-  if (my_position >= 0) {
-    if (rank == source) {
-      PerformComputeLoad(150000);
-      MPI_Send(&data_size, 1, MPI_UINT64_T, next_neighbor, 0, MPI_COMM_WORLD);
-      if (data_size > 0) {
-        MPI_Send(data.data(), static_cast<int>(data_size), MPI_INT, next_neighbor, 1, MPI_COMM_WORLD);
-      }
-    } else if (rank == dest) {
-      MPI_Recv(&data_size, 1, MPI_UINT64_T, prev_neighbor, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      if (data_size > 0) {
-        data.resize(data_size);
-        MPI_Recv(data.data(), static_cast<int>(data_size), MPI_INT, prev_neighbor, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      }
-      PerformComputeLoad(150000);
-    } else {
-      MPI_Recv(&data_size, 1, MPI_UINT64_T, prev_neighbor, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      if (data_size > 0) {
-        data.resize(data_size);
-        MPI_Recv(data.data(), static_cast<int>(data_size), MPI_INT, prev_neighbor, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      }
-      PerformComputeLoad(150000);
-      MPI_Send(&data_size, 1, MPI_UINT64_T, next_neighbor, 0, MPI_COMM_WORLD);
-      if (data_size > 0) {
-        MPI_Send(data.data(), static_cast<int>(data_size), MPI_INT, next_neighbor, 1, MPI_COMM_WORLD);
-      }
-    }
+  if (rank == source) {
+    PerformComputeLoad(150000);
+    SendData(data, next_neighbor);
+  } else if (rank == dest) {
+    RecvData(data, prev_neighbor);
+    data_size = data.size();
+    PerformComputeLoad(150000);
+  } else {
+    RecvData(data, prev_neighbor);
+    PerformComputeLoad(150000);
+    SendData(data, next_neighbor);
   }
 
-  GetOutput() = {data, rank, true};
+  MPI_Bcast(&data_size, 1, MPI_UINT64_T, dest, MPI_COMM_WORLD);
+  if (my_position == -1) {
+    data.resize(data_size);
+  }
+
+  MPI_Bcast(data.data(), static_cast<int>(data_size), MPI_INT, dest, MPI_COMM_WORLD);
+
+  GetOutput().data = data;
+  GetOutput().process_id = rank;
+  GetOutput().exec = exec_;
+  MPI_Barrier(MPI_COMM_WORLD);
   return true;
 }
 ```
