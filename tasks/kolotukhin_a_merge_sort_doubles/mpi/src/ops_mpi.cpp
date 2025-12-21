@@ -105,34 +105,33 @@ bool KolotukhinAMergeSortDoublesMPI::ValidationImpl() {
 bool KolotukhinAMergeSortDoublesMPI::PreProcessingImpl() {
   GetOutput().clear();
   GetOutput().resize(GetInput().size());
-  return GetOutput().size() > 0;
+  return true;
 }
 
 bool KolotukhinAMergeSortDoublesMPI::RunImpl() {
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
-  
+
   const auto& input = GetInput();
-  
-  // Процесс 0 распространяет размер данных
   int global_size = static_cast<int>(input.size());
   MPI_Bcast(&global_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
-  
+
   if (global_size == 0) {
     GetOutput() = std::vector<double>();
+    MPI_Barrier(MPI_COMM_WORLD);
     return true;
   }
-  
-  // Распределение данных
+
+
   int local_size = global_size / size;
   if (rank < global_size % size) {
     local_size++;
   }
-  
+
   std::vector<int> displs(size, 0);
   std::vector<int> recv_counts(size, 0);
-  
+
   if (rank == 0) {
     int offset = 0;
     for (int i = 0; i < size; ++i) {
@@ -141,18 +140,18 @@ bool KolotukhinAMergeSortDoublesMPI::RunImpl() {
       offset += recv_counts[i];
     }
   }
-  
+
   MPI_Bcast(recv_counts.data(), size, MPI_INT, 0, MPI_COMM_WORLD);
   MPI_Bcast(displs.data(), size, MPI_INT, 0, MPI_COMM_WORLD);
-  
-  // Получение локальных данных
+
+
   std::vector<double> local_data(local_size);
-  
+
   if (rank == 0) {
-    // Процесс 0 копирует свою часть
+
     std::copy(input.begin(), input.begin() + local_size, local_data.begin());
-    
-    // Отправляем остальным
+
+
     for (int i = 1; i < size; ++i) {
       if (recv_counts[i] > 0) {
         MPI_Send(input.data() + displs[i], recv_counts[i], MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
@@ -161,11 +160,9 @@ bool KolotukhinAMergeSortDoublesMPI::RunImpl() {
   } else if (local_size > 0) {
     MPI_Recv(local_data.data(), local_size, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   }
-  
-  // Локальная сортировка
+
   radix_sort_doubles(local_data);
-  
-  // Иерархическое слияние
+
   int step = 1;
   while (step < size) {
     if (rank % (2 * step) == 0) {
@@ -173,39 +170,33 @@ bool KolotukhinAMergeSortDoublesMPI::RunImpl() {
       if (source_rank < size) {
         int remote_size;
         MPI_Recv(&remote_size, 1, MPI_INT, source_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        
         if (remote_size > 0) {
           std::vector<double> remote_data(remote_size);
-          MPI_Recv(remote_data.data(), remote_size, MPI_DOUBLE, 
-                  source_rank, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-          
+          MPI_Recv(remote_data.data(), remote_size, MPI_DOUBLE, source_rank, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
           local_data = merge_sorted_arrays(local_data, remote_data);
         }
       }
     } else if ((rank - step) % (2 * step) == 0) {
       int dest_rank = rank - step;
       int send_size = static_cast<int>(local_data.size());
-      
+
       MPI_Send(&send_size, 1, MPI_INT, dest_rank, 0, MPI_COMM_WORLD);
-      
       if (send_size > 0) {
         MPI_Send(local_data.data(), send_size, MPI_DOUBLE, dest_rank, 1, MPI_COMM_WORLD);
       }
-      
       local_data.clear();
     }
-    
+
     step *= 2;
     MPI_Barrier(MPI_COMM_WORLD);
   }
-  
-  // Процесс 0 сохраняет результат
-  if (rank == 0) {
-    GetOutput() = local_data;
-  } else {
-    GetOutput() = std::vector<double>();
+
+  if (rank != 0) {
+    local_data.resize(global_size);
   }
-  
+  MPI_Bcast(local_data.data(), global_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  GetOutput() = local_data;
+  // std::cout << "[LOCAL SIZE] #" << rank << " is " << local_data.size() << std::endl;
   return true;
 }
 

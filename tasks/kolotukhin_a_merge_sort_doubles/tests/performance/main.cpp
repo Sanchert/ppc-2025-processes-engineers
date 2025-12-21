@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <cstddef>
+
 #include "kolotukhin_a_merge_sort_doubles/common/include/common.hpp"
 #include "kolotukhin_a_merge_sort_doubles/mpi/include/ops_mpi.hpp"
 #include "kolotukhin_a_merge_sort_doubles/seq/include/ops_seq.hpp"
@@ -13,8 +15,7 @@ class KolotukhinAMergeSortDoublesPerfTests : public ppc::util::BaseRunPerfTests<
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    // Простая проверка сортировки
-    for (size_t i = 1; i < output_data.size(); ++i) {
+    for (std::size_t i = 1; i < output_data.size(); ++i) {
       if (output_data[i] < output_data[i - 1]) {
         return false;
       }
@@ -27,27 +28,16 @@ class KolotukhinAMergeSortDoublesPerfTests : public ppc::util::BaseRunPerfTests<
   }
   private:
   void GenerateTestData() {
-    const size_t data_size = 1000000;  // 1 миллион элементов
-    
+    const std::size_t data_size = 1000000;
     test_data_.resize(data_size);
-    
-    // Заполняем массив числами в обратном порядке
-    // Это создает интересный случай для сортировки
-    for (size_t i = 0; i < data_size; ++i) {
-      // Используем простую формулу для генерации чисел
-      // Чередуем положительные и отрицательные числа
+    for (std::size_t i = 0; i < data_size; ++i) {
       double value = static_cast<double>(data_size - i);
-      
-      // Каждое 3-е число делаем отрицательным
       if (i % 3 == 0) {
         value = -value;
       }
-      
-      // Каждое 7-е число делаем дробным
       if (i % 7 == 0) {
-        value += 0.5;
+        value += 0.25;
       }
-      
       test_data_[i] = value;
     }
   }

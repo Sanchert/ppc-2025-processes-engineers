@@ -1,15 +1,10 @@
 #include <gtest/gtest.h>
-#include <stb/stb_image.h>
 
-#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <numeric>
-#include <stdexcept>
 #include <string>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 #include "kolotukhin_a_merge_sort_doubles/common/include/common.hpp"
@@ -23,7 +18,7 @@ namespace kolotukhin_a_merge_sort_doubles {
 class KolotukhinAMergeSortDoublesFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
-    return "size_" + std::get<1>(test_param);
+    return "_type_" + std::get<1>(test_param);
   }
 
  protected:
@@ -35,11 +30,13 @@ class KolotukhinAMergeSortDoublesFuncTests : public ppc::util::BaseRunFuncTests<
 
   bool CheckTestOutputData(OutType &output_data) final {
     if (output_data.size() != expected_output_.size()) {
+      // std::cout << "[SIZE_ERR]" << std::endl;
       return false;
     }
     
-    for (size_t i = 0; i < output_data.size(); ++i) {
+    for (std::size_t i = 0; i < output_data.size(); ++i) {
       if (std::abs(output_data[i] - expected_output_[i]) > 1e-12) {
+        // std::cout << "[VALUE_ERR]" << std::endl;
         return false;
       }
     }

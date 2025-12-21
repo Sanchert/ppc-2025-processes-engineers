@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include "kolotukhin_a_merge_sort_doubles/common/include/common.hpp"
 #include "task/include/task.hpp"
 
