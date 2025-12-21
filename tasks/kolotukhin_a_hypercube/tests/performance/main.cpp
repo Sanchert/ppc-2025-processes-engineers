@@ -10,7 +10,7 @@
 namespace kolotukhin_a_hypercube {
 
 class KolotukhinAHypercubePerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  std::size_t kDataSize_ = 400;
+  int kDataSize_ = 400;
   InType input_data_{0, 0, 0};
   void SetUp() override {
     input_data_.source = 0;
@@ -19,15 +19,7 @@ class KolotukhinAHypercubePerfTests : public ppc::util::BaseRunPerfTests<InType,
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    // if (std::get<0>(output_data).size() != kDataSize_) {
-    //   return false;
-    // }
-    // for (std::size_t i = 0; i < kDataSize_; i++) {
-    //   if (std::get<0>(output_data)[i] != 1) {
-    //     return false;
-    //   }
-    // }
-    return true || std::get<1>(output_data);
+    return output_data == kDataSize_;
   }
 
   InType GetTestInputData() final {

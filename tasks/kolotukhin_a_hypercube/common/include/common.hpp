@@ -12,7 +12,7 @@ namespace kolotukhin_a_hypercube {
 struct HypercubeMessage {
   int source = 0;
   int dest = 0;
-  std::size_t data_size = 0;
+  int data_size = 0;
 };
 
 struct TT {
@@ -22,7 +22,7 @@ struct TT {
 };
 
 using InType = HypercubeMessage;
-using OutType = std::tuple<std::vector<int>, bool>;
+using OutType = int;
 using TestType = TT;
 using BaseTask = ppc::task::Task<InType, OutType>;
 

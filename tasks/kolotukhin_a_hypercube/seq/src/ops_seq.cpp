@@ -10,23 +10,20 @@ namespace kolotukhin_a_hypercube {
 KolotukhinAHypercubeSEQ::KolotukhinAHypercubeSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
-  GetOutput() = {};
+  GetOutput() = 0;
 }
 
 bool KolotukhinAHypercubeSEQ::ValidationImpl() {
-  return std::get<0>(GetOutput()).empty();
+  return GetOutput() == 0;
 }
 
 bool KolotukhinAHypercubeSEQ::PreProcessingImpl() {
-  std::get<0>(GetOutput()).clear();
+  GetOutput() = 0;
   return true;
 }
 
 bool KolotukhinAHypercubeSEQ::RunImpl() {
-  std::size_t data_size = GetInput().data_size;
-  if (std::get<0>(GetOutput()).empty()) {
-    std::get<0>(GetOutput()).resize(data_size, 1);
-  }
+  GetOutput() = GetInput().data_size;
   return true;
 }
 
