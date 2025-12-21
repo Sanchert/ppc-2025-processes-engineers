@@ -20,14 +20,8 @@ struct TT {
   std::string name;
 };
 
-struct Out {
-  std::vector<int> data;
-  int process_id = 0;
-  bool exec = true;
-};
-
 using InType = HypercubeMessage;
-using OutType = Out;
+using OutType = std::tuple<std::vector<int>, bool>;
 using TestType = TT;
 using BaseTask = ppc::task::Task<InType, OutType>;
 

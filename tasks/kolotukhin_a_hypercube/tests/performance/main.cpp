@@ -19,11 +19,11 @@ class KolotukhinAHypercubePerfTests : public ppc::util::BaseRunPerfTests<InType,
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    if (output_data.data.size() != kDataSize_) {
+    if (std::get<0>(output_data).size() != kDataSize_) {
       return false;
     }
     for (std::size_t i = 0; i < kDataSize_; i++) {
-      if (output_data.data[i] != 1) {
+      if (std::get<0>(output_data)[i] != 1) {
         return false;
       }
     }

@@ -31,15 +31,13 @@ class KolotukhinAHypercubeFuncTests : public ppc::util::BaseRunFuncTests<InType,
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    if (output_data.exec) {
-      TestType tt = std::get<static_cast<std::uint8_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-      if (tt.msg.data_size != output_data.data.size()) {
+    TestType tt = std::get<static_cast<std::uint8_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    if (tt.msg.data_size != std::get<0>(output_data).size()) {
+      return false;
+    }
+    for (std::size_t i = 0; i < tt.msg.data_size; i++) {
+      if (std::get<0>(output_data)[i] != tt.data[i]) {
         return false;
-      }
-      for (std::size_t i = 0; i < tt.msg.data_size; i++) {
-        if (output_data.data[i] != tt.data[i]) {
-          return false;
-        }
       }
     }
     return true;

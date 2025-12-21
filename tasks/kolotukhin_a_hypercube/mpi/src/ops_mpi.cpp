@@ -15,9 +15,7 @@ namespace kolotukhin_a_hypercube {
 KolotukhinAHypercubeMPI::KolotukhinAHypercubeMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
-  GetOutput().data = std::vector<int>{};
-  GetOutput().process_id = -1;
-  GetOutput().exec = true;
+  GetOutput() = {};
 }
 
 int KolotukhinAHypercubeMPI::GetNeighbor(int rank, int dim) {
@@ -115,7 +113,7 @@ bool KolotukhinAHypercubeMPI::ValidationImpl() {
 }
 
 bool KolotukhinAHypercubeMPI::PreProcessingImpl() {
-  GetOutput().data.clear();
+  std::get<0>(GetOutput()).clear();
   return true;
 }
 
@@ -145,14 +143,12 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   }
 
   if (source == dest) {
-    GetOutput().process_id = rank;
-    GetOutput().exec = exec_;
     MPI_Bcast(&data_size, 1, MPI_UINT64_T, dest, MPI_COMM_WORLD);
     if (rank != dest) {
       data.resize(data_size);
     }
     MPI_Bcast(data.data(), static_cast<int>(data_size), MPI_INT, dest, MPI_COMM_WORLD);
-    GetOutput().data = data;
+    std::get<0>(GetOutput()) = data;
     return true;
   }
 
@@ -183,9 +179,8 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
 
   MPI_Bcast(data.data(), static_cast<int>(data_size), MPI_INT, dest, MPI_COMM_WORLD);
 
-  GetOutput().data = data;
-  GetOutput().process_id = rank;
-  GetOutput().exec = exec_;
+  std::get<0>(GetOutput()) = data;
+  std::get<1>(GetOutput()) = exec_;
   MPI_Barrier(MPI_COMM_WORLD);
   return true;
 }
