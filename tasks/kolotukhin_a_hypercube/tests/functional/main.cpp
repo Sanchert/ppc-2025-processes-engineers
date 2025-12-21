@@ -33,7 +33,7 @@ class KolotukhinAHypercubeFuncTests : public ppc::util::BaseRunFuncTests<InType,
   bool CheckTestOutputData(OutType &output_data) final {
     if (output_data.exec) {
       TestType tt = std::get<static_cast<std::uint8_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-      if (output_data.process_id == tt.msg.dest) {
+      // if (output_data.process_id == tt.msg.dest) {
         if (tt.msg.data_size != output_data.data.size()) {
           return false;
         }
@@ -42,7 +42,12 @@ class KolotukhinAHypercubeFuncTests : public ppc::util::BaseRunFuncTests<InType,
             return false;
           }
         }
-      }
+        std::cout << "[DONE] #" << output_data.process_id << std::endl;
+      // } else {
+      //   std::cout << "[NOT CHECK] #" << output_data.process_id << std::endl;
+      // }
+    } else {
+      std::cout << "[NOT VALID] #" << output_data.process_id << std::endl;
     }
     return true;
   }
@@ -67,7 +72,7 @@ const std::array<TestType, 6> kTestParam = {
     TestType(HypercubeMessage(0, 1, 4), std::vector<int>{1, 3, 5, 7}, "neighboors"),
     TestType(HypercubeMessage(2, 3, 4), std::vector<int>{1, 3, 5, 7}, "zero_not_source"),
     TestType(HypercubeMessage(2, 2, 4), std::vector<int>{1, 3, 5, 7}, "to_itself"),
-    TestType(HypercubeMessage(3, 0, 4), std::vector<int>{1, 3, 5, 7}, "reverse"),
+    TestType(HypercubeMessage(3, 0, 4), std::vector<int>{1, 3, 5, 7}, "reverse")
 };
 
 const auto kTestTasksList = std::tuple_cat(

@@ -26,11 +26,16 @@ int KolotukhinAHypercubeMPI::GetNeighbor(int rank, int dim) {
 }
 
 int KolotukhinAHypercubeMPI::CalculateHypercubeDimension(int num_processes) {
+  if (num_processes <= 1) return 0;
+  
   int dimension = 0;
-  while (num_processes > 1) {
-    num_processes >>= 1;
+  int capacity = 1;  // Сколько процессов вмещает гиперкуб данной размерности
+  
+  while (capacity < num_processes) {
     dimension++;
+    capacity *= 2;  // Каждое новое измерение удваивает вместимость
   }
+  
   return dimension;
 }
 
@@ -52,17 +57,21 @@ void KolotukhinAHypercubeMPI::PerformComputeLoad(int iterations) {
 void KolotukhinAHypercubeMPI::SendData(std::vector<int> &data, int next_neighbor) {
   std::uint64_t data_size = data.size();
   MPI_Send(&data_size, 1, MPI_UINT64_T, next_neighbor, 0, MPI_COMM_WORLD);
+  std::cout << "[SEND] " << " size " << data_size << ", to " << next_neighbor << std::endl;
   if (data_size > 0) {
     MPI_Send(data.data(), static_cast<int>(data_size), MPI_INT, next_neighbor, 1, MPI_COMM_WORLD);
+    std::cout << "[SEND] " << " data " << data.size() << ", to " << next_neighbor << std::endl;
   }
 }
 
 void KolotukhinAHypercubeMPI::RecvData(std::vector<int> &data, int prev_neighbor) {
   std::uint64_t data_size = 0;
   MPI_Recv(&data_size, 1, MPI_UINT64_T, prev_neighbor, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  std::cout << "[RECV] " << " size " << data_size << ", from " << prev_neighbor << std::endl;
   data.resize(data_size);
   if (data_size > 0) {
     MPI_Recv(data.data(), static_cast<int>(data_size), MPI_INT, prev_neighbor, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    std::cout << "[RECV] " << " data " << data.size() << ", from " << prev_neighbor << std::endl;
   }
 }
 
@@ -102,11 +111,20 @@ std::vector<int> KolotukhinAHypercubeMPI::CalcPath(int source, int dest, int dim
 bool KolotukhinAHypercubeMPI::ValidationImpl() {
   int world_size = 0;
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+  // if ((world_size & (world_size - 1)) != 0) {
+  //   GetInput().dest = world_size-1;
+  //   std::cout << "[VALIDATION CONVERT] new dest = " << GetInput().dest << std::endl;
+  // }
+  MPI_Barrier(MPI_COMM_WORLD);
   if ((GetInput().source < 0) || (GetInput().source > world_size - 1) ||
-      ((GetInput().dest < 0) && (GetInput().dest != -2)) || (GetInput().dest > world_size - 1) || (world_size <= 0) ||
-      ((world_size & (world_size - 1)) != 0)) {
-    exec_ = false;
+      ((GetInput().dest < 0) && (GetInput().dest != -2)) || (GetInput().dest > world_size - 1) || (world_size <= 0)) {
+    GetInput().source = 0;
+    GetInput().dest = world_size - 1;
+    std::cout << "[VALIDATION CONVERT] new dest = " << GetInput().dest << std::endl;
+  } else {
+    std::cout << "[ALL VALID]" << std::endl;
   }
+  MPI_Barrier(MPI_COMM_WORLD);
   return true;
 }
 
@@ -132,6 +150,9 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   const auto &input = GetInput();
   int source = input.source;
   int dest = input.dest;
+  MPI_Barrier(MPI_COMM_WORLD);
+  std::cout << "#" << rank << "[SOURCE -> DEST] #" << source << "->#" << dest << std::endl;
+  MPI_Barrier(MPI_COMM_WORLD);
   if (dest == -2) {
     dest = world_size - 1;
   }
@@ -140,7 +161,9 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
 
   int dimensions = 0;
   dimensions = CalculateHypercubeDimension(world_size);
-
+  MPI_Barrier(MPI_COMM_WORLD);
+  std::cout << "dims = " << dimensions << std::endl;
+  MPI_Barrier(MPI_COMM_WORLD);
   if (rank == source) {
     data_size = static_cast<std::uint64_t>(GetInput().data_size);
     data.resize(data_size);
@@ -150,48 +173,82 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   }
 
   if (source == dest) {
-    GetOutput().data = data;
     GetOutput().process_id = rank;
     GetOutput().exec = exec_;
+    MPI_Bcast(&data_size, 1, MPI_UINT64_T, dest, MPI_COMM_WORLD);
+    if (rank != dest) {
+      data.resize(data_size);
+    }
+    MPI_Bcast(data.data(), static_cast<int>(data_size), MPI_INT, dest, MPI_COMM_WORLD);
+    GetOutput().data = data;
     return true;
   }
 
   std::vector<int> path = CalcPath(source, dest, dimensions);
   if (path.back() != dest) {
+    for (int i = 0; i < path.size(); i++) {
+      std::cout << "#" << rank << "[path] :" << path[i] << std::endl;
+    }
     GetOutput().data.clear();
     GetOutput().process_id = -1;
     GetOutput().exec = exec_;
     MPI_Barrier(MPI_COMM_WORLD);
+    std::cout << "#" << rank << "[PATH ERR]" << std::endl;
     return false;
   }
+  MPI_Barrier(MPI_COMM_WORLD);
+  for (int i = 0; i < path.size(); i++) {
+    std::cout << "#" << rank << "[path] :" << path[i] << std::endl;
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
   int my_position = -1;
   int prev_neighbor = -1;
   int next_neighbor = -1;
   CalcPositions(rank, path, my_position, next_neighbor, prev_neighbor);
-
+  MPI_Barrier(MPI_COMM_WORLD);
+  std::cout << "#"<<rank << "[Positions] " << prev_neighbor << ", " << my_position << ", " << next_neighbor << std::endl;
+  MPI_Barrier(MPI_COMM_WORLD);
   if (rank == source) {
     PerformComputeLoad(150000);
     SendData(data, next_neighbor);
+    std::cout << "[SEND] " << rank << " -> " << next_neighbor << std::endl;
   } else if (rank == dest) {
     RecvData(data, prev_neighbor);
+    data_size = data.size();
+    std::cout << "[RECV] " << rank << " <- " << prev_neighbor << std::endl;
     PerformComputeLoad(150000);
   } else {
     RecvData(data, prev_neighbor);
+    std::cout << "[RECV] " << rank << " <- " << prev_neighbor << std::endl;
     PerformComputeLoad(150000);
     SendData(data, next_neighbor);
-    data.clear();
+    std::cout << "[SEND] " << rank << " -> " << next_neighbor << std::endl;
   }
-
-  if (rank == dest || rank == source) {
-    GetOutput().data = data;
-  } else {
-    GetOutput().data = std::vector<int>();
+  // if (rank == dest) {
+  //   if (rank == world_size - 1) {
+  //     rank = -2;
+  //   }
+  //   GetOutput().process_id = rank;
+  //   GetOutput().data = data;
+  // } else {
+  //   GetOutput().data = std::vector<int>();
+  //   GetOutput().process_id = rank;
+  // }
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Bcast(&data_size, 1, MPI_UINT64_T, dest, MPI_COMM_WORLD);
+  std::cout<< "#" << rank << " data_size" << data.size() << ", size = " << data_size << std::endl;
+  if (my_position == -1) {
+    data.resize(data_size);
   }
-  if (rank == world_size - 1) {
-    rank = -2;
-  }
+  MPI_Bcast(data.data(), static_cast<int>(data_size), MPI_INT, dest, MPI_COMM_WORLD);
+  std::cout << "[SUCCESS BCAST] #" << rank << std::endl;
+  GetOutput().data = data;
   GetOutput().process_id = rank;
   GetOutput().exec = exec_;
+  MPI_Barrier(MPI_COMM_WORLD);
+  std::cout << "[SUCCESS BARRIER] #" << rank << std::endl;
+  MPI_Barrier(MPI_COMM_WORLD);
+  std::cout << "#" << rank << " ds = " << data.size() << std::endl;
   MPI_Barrier(MPI_COMM_WORLD);
   return true;
 }

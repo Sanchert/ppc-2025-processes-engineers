@@ -20,7 +20,7 @@ class KolotukhinAHypercubePerfTests : public ppc::util::BaseRunPerfTests<InType,
 
   bool CheckTestOutputData(OutType &output_data) final {
     if (output_data.exec) {
-      if (output_data.process_id == input_data_.dest) {
+      // if (output_data.process_id == input_data_.dest) {
         if (output_data.data.size() != kDataSize_) {
           return false;
         }
@@ -30,9 +30,9 @@ class KolotukhinAHypercubePerfTests : public ppc::util::BaseRunPerfTests<InType,
           }
         }
         std::cout << "[DONE] #" << output_data.process_id << std::endl;
-      } else {
-        std::cout << "[NOT CHECK] #" << output_data.process_id << std::endl;
-      }
+      // } else {
+      //   std::cout << "[NOT CHECK] #" << output_data.process_id << std::endl;
+      // }
     } else {
       std::cout << "[NOT VALID] #" << output_data.process_id << std::endl;
     }
