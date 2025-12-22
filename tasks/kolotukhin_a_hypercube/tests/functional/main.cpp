@@ -49,12 +49,13 @@ TEST_P(KolotukhinAHypercubeFuncTests, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 6> kTestParam = {std::make_tuple(std::vector<int>{0, 3, 4}, "far"),
-                                            std::make_tuple(std::vector<int>{0, 3, 0}, "far_empty"),
-                                            std::make_tuple(std::vector<int>{0, 1, 4}, "neighboors"),
-                                            std::make_tuple(std::vector<int>{2, 3, 4}, "zero_not_source"),
-                                            std::make_tuple(std::vector<int>{2, 2, 4}, "to_itself"),
-                                            std::make_tuple(std::vector<int>{3, 0, 4}, "reverse")};
+const std::array<TestType, 56> kTestParam = {std::make_tuple(std::vector<int>{0, 3, 4}, "far"),
+                                             std::make_tuple(std::vector<int>{0, 3, 0}, "far_empty"),
+                                             std::make_tuple(std::vector<int>{0, 1, 4}, "neighboors"),
+                                             std::make_tuple(std::vector<int>{2, 3, 4}, "zero_not_source"),
+                                             std::make_tuple(std::vector<int>{2, 2, 4}, "to_itself"),
+                                             std::make_tuple(std::vector<int>{2, 1, 4}, "revers_path"),
+                                             std::make_tuple(std::vector<int>{3, 0, 4}, "reverse")};
 
 const auto kTestTasksList = std::tuple_cat(
     ppc::util::AddFuncTask<KolotukhinAHypercubeMPI, InType>(kTestParam, PPC_SETTINGS_kolotukhin_a_hypercube),

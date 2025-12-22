@@ -43,18 +43,36 @@
 4. процесс-получатель передает всем процессам полученные данные.
 
 ```cpp
-int current = source;
-path.push_back(current);
-int xor_val = source ^ dest;
-for (int dim = 0; dim < dimensions; dim++) {
-  int mask = 1 << dim;
-  if ((xor_val & mask) != 0) {
-    current = current ^ mask;
-    path.push_back(current);
-    if (current == dest) {
-      break;
+std::vector<int> KolotukhinAHypercubeMPI::CalcPath(int source, int dest, int dimensions) {
+  std::vector<int> path;
+  int current = source;
+  path.push_back(current);
+  int xor_val = source ^ dest;
+  // Если source > dest, начинаем со старших битов, иначе - с младших
+  if (source > dest) {
+    for (int dim = dimensions - 1; dim >= 0; dim--) {
+      int mask = 1 << dim;
+      if ((xor_val & mask) != 0) {
+        current = current ^ mask;
+        path.push_back(current);
+        if (current == dest) {
+          break; 
+        }
+      }
+    }
+  } else {
+    for (int dim = 0; dim < dimensions; dim++) {
+      int mask = 1 << dim;
+      if ((xor_val & mask) != 0) {
+        current = current ^ mask;
+        path.push_back(current);
+        if (current == dest) {
+          break;
+        }
+      }
     }
   }
+  return path;
 }
 ```
 
