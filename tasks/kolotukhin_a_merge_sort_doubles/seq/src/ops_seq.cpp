@@ -11,7 +11,8 @@ namespace kolotukhin_a_merge_sort_doubles {
 KolotukhinAMergeSortDoublesSEQ::KolotukhinAMergeSortDoublesSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
-  GetOutput() = std::vector<double>();
+  std::get<0>(GetOutput()) = std::vector<double>();
+  std::get<1>(GetOutput()) = -1;
 }
 
 bool KolotukhinAMergeSortDoublesSEQ::ValidationImpl() {
@@ -19,15 +20,16 @@ bool KolotukhinAMergeSortDoublesSEQ::ValidationImpl() {
 }
 
 bool KolotukhinAMergeSortDoublesSEQ::PreProcessingImpl() {
-  GetOutput().clear();
+  std::get<0>(GetOutput()).clear();
   return true;
 }
 
 bool KolotukhinAMergeSortDoublesSEQ::RunImpl() {
   const auto &input = GetInput();
-  GetOutput().resize(GetInput().size());
+  std::get<0>(GetOutput()).resize(GetInput().size());
   if (input.empty()) {
-    GetOutput() = input;
+    std::get<0>(GetOutput()) = input;
+    std::get<1>(GetOutput()) = 0;
     return true;
   }
   std::vector<double> data = input;
@@ -70,7 +72,8 @@ bool KolotukhinAMergeSortDoublesSEQ::RunImpl() {
     }
     std::memcpy(&data[i], &u, sizeof(double));
   }
-  GetOutput() = data;
+  std::get<0>(GetOutput()) = data;
+  std::get<1>(GetOutput()) = 0;
   return true;
 }
 

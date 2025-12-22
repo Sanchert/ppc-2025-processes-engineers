@@ -27,13 +27,16 @@ class KolotukhinAMergeSortDoublesFuncTests : public ppc::util::BaseRunFuncTests<
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    if (output_data.size() != expected_output_.size()) {
-      return false;
-    }
-    for (std::size_t i = 0; i < output_data.size(); ++i) {
-      if (std::abs(output_data[i] - expected_output_[i]) > 1e-12) {
+    if (std::get<1>(output_data) == 0) {
+      if (std::get<0>(output_data).size() != expected_output_.size()) {
         return false;
       }
+      for (std::size_t i = 0; i < std::get<0>(output_data).size(); ++i) {
+        if (std::abs(std::get<0>(output_data)[i] - expected_output_[i]) > 1e-12) {
+          return false;
+        }
+      }
+      // std::cout << "[PROCESS] #" << std::get<1>(output_data) << " = SUCCESS" << std::endl;
     }
     return true;
   }

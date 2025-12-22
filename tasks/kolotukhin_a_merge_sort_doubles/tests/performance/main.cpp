@@ -10,7 +10,7 @@
 namespace kolotukhin_a_merge_sort_doubles {
 
 class KolotukhinAMergeSortDoublesPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  std::size_t kCount_ = 100000;
+  std::size_t kCount_ = 1000000;
   void SetUp() override {
     test_data_.resize(kCount_);
     for (std::size_t i = 0; i < kCount_; ++i) {
@@ -26,10 +26,13 @@ class KolotukhinAMergeSortDoublesPerfTests : public ppc::util::BaseRunPerfTests<
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    for (std::size_t i = 1; i < output_data.size(); ++i) {
-      if (output_data[i] < output_data[i - 1]) {
-        return false;
+    if (std::get<1>(output_data) == 0) {
+      for (std::size_t i = 1; i < std::get<0>(output_data).size(); ++i) {
+        if (std::get<0>(output_data)[i] < std::get<0>(output_data)[i - 1]) {
+          return false;
+        }
       }
+      // std::cout << "[PROCESS] #" << std::get<1>(output_data) << " = SUCCESS" << std::endl;
     }
     return true;
   }

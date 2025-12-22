@@ -4,7 +4,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <numeric>
 #include <vector>
 
 #include "kolotukhin_a_merge_sort_doubles/common/include/common.hpp"
@@ -14,12 +13,12 @@ namespace kolotukhin_a_merge_sort_doubles {
 namespace {
 void RadixSortDoubles(std::vector<double> &data) {
   const std::size_t data_size = data.size();
-  if (data_size <= 1) {
+  if (data_size < 2) {
     return;
   }
   std::vector<std::uint64_t> keys(data_size);
   // Преобразование double -> uint64_t
-  for (size_t i = 0; i < data_size; i++) {
+  for (std::size_t i = 0; i < data_size; i++) {
     std::uint64_t u;
     std::memcpy(&u, &data[i], sizeof(double));
     if (u & 0x8000000000000000ULL) {
@@ -36,7 +35,7 @@ void RadixSortDoubles(std::vector<double> &data) {
   for (int shift = 0; shift < 64; shift += 8) {
     std::size_t count[RADIX_SIZE + 1] = {0};
 
-    for (std::size_t i = 0; i < data_size; ++i) {
+    for (std::size_t i = 0; i < data_size; i++) {
       std::uint8_t digit = static_cast<std::uint8_t>((keys[i] >> shift) & 0xFF);
       ++count[digit + 1];
     }
@@ -70,7 +69,7 @@ std::vector<double> MergeSortedArrays(const std::vector<double> &a, const std::v
   std::size_t i = 0;
   std::size_t j = 0;
   while (i < a.size() && j < b.size()) {
-    if (a[i] <= b[j]) {
+    if (a[i] < b[j]) {
       result.push_back(a[i++]);
     } else {
       result.push_back(b[j++]);
@@ -89,7 +88,8 @@ std::vector<double> MergeSortedArrays(const std::vector<double> &a, const std::v
 KolotukhinAMergeSortDoublesMPI::KolotukhinAMergeSortDoublesMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
-  GetOutput() = std::vector<double>();
+  std::get<0>(GetOutput()) = std::vector<double>();
+  std::get<1>(GetOutput()) = -1;
 }
 
 bool KolotukhinAMergeSortDoublesMPI::ValidationImpl() {
@@ -99,46 +99,47 @@ bool KolotukhinAMergeSortDoublesMPI::ValidationImpl() {
 }
 
 bool KolotukhinAMergeSortDoublesMPI::PreProcessingImpl() {
-  GetOutput().clear();
-  GetOutput().resize(GetInput().size());
+  std::get<0>(GetOutput()).clear();
+  // std::get<0>(GetOutput()).resize(GetInput().size());
   return true;
 }
 
 bool KolotukhinAMergeSortDoublesMPI::RunImpl() {
   int rank = 0;
-  int size = 0;
+  int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
   const auto &input = GetInput();
-  int global_size = static_cast<int>(input.size());
-  MPI_Bcast(&global_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  int data_size = static_cast<int>(input.size());
+  MPI_Bcast(&data_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-  if (global_size == 0) {
-    GetOutput() = std::vector<double>();
+  if (data_size == 0) {
+    std::get<0>(GetOutput()) = std::vector<double>();
+    std::get<1>(GetOutput()) = rank;
     MPI_Barrier(MPI_COMM_WORLD);
     return true;
   }
 
-  int local_size = global_size / size;
-  if (rank < global_size % size) {
+  int local_size = data_size / world_size;
+  if (rank < data_size % world_size) {
     local_size++;
   }
 
-  std::vector<int> displs(size, 0);
-  std::vector<int> recv_counts(size, 0);
+  std::vector<int> displs(world_size, 0);
+  std::vector<int> recv_counts(world_size, 0);
 
   if (rank == 0) {
     int offset = 0;
-    for (int i = 0; i < size; ++i) {
-      recv_counts[i] = global_size / size + (i < (global_size % size) ? 1 : 0);
+    for (int i = 0; i < world_size; ++i) {
+      recv_counts[i] = data_size / world_size + (i < (data_size % world_size) ? 1 : 0);
       displs[i] = offset;
       offset += recv_counts[i];
     }
   }
 
-  MPI_Bcast(recv_counts.data(), size, MPI_INT, 0, MPI_COMM_WORLD);
-  MPI_Bcast(displs.data(), size, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(recv_counts.data(), world_size, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(displs.data(), world_size, MPI_INT, 0, MPI_COMM_WORLD);
 
   std::vector<double> local_data(local_size);
 
@@ -148,10 +149,10 @@ bool KolotukhinAMergeSortDoublesMPI::RunImpl() {
   RadixSortDoubles(local_data);
 
   int step = 1;
-  while (step < size) {
+  while (step < world_size) {
     if ((rank % (2 * step)) == 0) {
       int source_rank = rank + step;
-      if (source_rank < size) {
+      if (source_rank < world_size) {
         int remote_size = 0;
         MPI_Recv(&remote_size, 1, MPI_INT, source_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         if (remote_size > 0) {
@@ -174,10 +175,11 @@ bool KolotukhinAMergeSortDoublesMPI::RunImpl() {
   }
 
   if (rank != 0) {
-    local_data.resize(global_size);
+    local_data.resize(data_size);
   }
-  MPI_Bcast(local_data.data(), global_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  GetOutput() = local_data;
+  // MPI_Bcast(local_data.data(), data_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  std::get<0>(GetOutput()) = local_data;
+  std::get<1>(GetOutput()) = rank;
   return true;
 }
 
