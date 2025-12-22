@@ -32,7 +32,6 @@ class KolotukhinAMergeSortDoublesPerfTests : public ppc::util::BaseRunPerfTests<
           return false;
         }
       }
-      // std::cout << "[PROCESS] #" << std::get<1>(output_data) << " = SUCCESS" << std::endl;
     }
     return true;
   }
