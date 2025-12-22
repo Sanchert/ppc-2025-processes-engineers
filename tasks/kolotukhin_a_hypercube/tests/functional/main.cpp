@@ -17,20 +17,21 @@ namespace kolotukhin_a_hypercube {
 class KolotukhinAHypercubeFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
-    return test_param.name;
+    return std::get<1>(test_param);
   }
 
  protected:
   void SetUp() override {
     TestType tt = std::get<static_cast<std::uint8_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    input_data_.source = tt.msg.source;
-    input_data_.dest = tt.msg.dest;
-    input_data_.data_size = tt.msg.data_size;
+    input_data_.resize(3);
+    input_data_[0] = std::get<0>(tt)[0];
+    input_data_[1] = std::get<0>(tt)[1];
+    input_data_[2] = std::get<0>(tt)[2];
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
     TestType tt = std::get<static_cast<std::uint8_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    return output_data == tt.msg.data_size;
+    return output_data == std::get<0>(tt)[2];
   }
 
   InType GetTestInputData() final {
@@ -47,12 +48,12 @@ TEST_P(KolotukhinAHypercubeFuncTests, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 6> kTestParam = {TestType(HypercubeMessage(0, 3, 4), {1, 1, 1, 1}, "far"),
-                                            TestType(HypercubeMessage(0, 3, 0), {}, "far_empty"),
-                                            TestType(HypercubeMessage(0, 1, 4), {1, 1, 1, 1}, "neighboors"),
-                                            TestType(HypercubeMessage(2, 3, 4), {1, 1, 1, 1}, "zero_not_source"),
-                                            TestType(HypercubeMessage(2, 2, 4), {1, 1, 1, 1}, "to_itself"),
-                                            TestType(HypercubeMessage(3, 0, 4), {1, 1, 1, 1}, "reverse")};
+const std::array<TestType, 6> kTestParam = {std::make_tuple(std::vector<int>{0, 3, 4}, "far"),
+                                            std::make_tuple(std::vector<int>{0, 3, 0}, "far_empty"),
+                                            std::make_tuple(std::vector<int>{0, 1, 4}, "neighboors"),
+                                            std::make_tuple(std::vector<int>{2, 3, 4}, "zero_not_source"),
+                                            std::make_tuple(std::vector<int>{2, 2, 4}, "to_itself"),
+                                            std::make_tuple(std::vector<int>{3, 0, 4}, "reverse")};
 
 const auto kTestTasksList = std::tuple_cat(
     ppc::util::AddFuncTask<KolotukhinAHypercubeMPI, InType>(kTestParam, PPC_SETTINGS_kolotukhin_a_hypercube),

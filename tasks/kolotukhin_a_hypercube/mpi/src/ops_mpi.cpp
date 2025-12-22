@@ -98,10 +98,11 @@ std::vector<int> KolotukhinAHypercubeMPI::CalcPath(int source, int dest, int dim
 bool KolotukhinAHypercubeMPI::ValidationImpl() {
   int world_size = 0;
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-  if ((GetInput().source < 0) || (GetInput().source > world_size - 1) ||
-      ((GetInput().dest < 0) && (GetInput().dest != -2)) || (GetInput().dest > world_size - 1) || (world_size <= 0)) {
-    GetInput().source = 0;
-    GetInput().dest = world_size - 1;
+  auto& input = GetInput();
+  if ((input[0] < 0) || (input[0] > world_size - 1) ||
+      ((input[1] < 0) && (input[1] != -2)) || (input[1] > world_size - 1) || (world_size <= 0)) {
+    input[0] = 0;
+    input[1] = world_size - 1;
   }
   return true;
 }
@@ -118,8 +119,8 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
   const auto &input = GetInput();
-  int source = input.source;
-  int dest = input.dest;
+  int source = input[0];
+  int dest = input[1];
 
   std::vector<int> data{};
   int data_size = 0;
@@ -127,7 +128,7 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   int dimensions = 0;
   dimensions = CalculateHypercubeDimension(world_size);
   if (rank == source) {
-    data_size = GetInput().data_size;
+    data_size = input[2];
     data.resize(static_cast<size_t>(data_size), 1);
   }
 

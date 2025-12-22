@@ -19,7 +19,7 @@ bool KolotukhinAHypercubeSEQ::PreProcessingImpl() {
 }
 
 bool KolotukhinAHypercubeSEQ::RunImpl() {
-  GetOutput() = GetInput().data_size;
+  GetOutput() = GetInput()[2];
   return true;
 }
 
