@@ -11,15 +11,13 @@
 
 **Входные данные (`InType`):**
 
-Сообщение (`HypercubeMessage`) передаваемое между процессами со следующей структурой: 
-- `source` (целое число) — процесс-отправитель
-- `dest` (целое число) — процесс-получатель
-- `data_size` (целое число) — количество элементов для генерации и передачи между процессами
+Информация из сообщения `HypercubeMessage`, которое представлено целочисленным вектором из 3 элементов, передаваемое между процессами со следующей структурой:
+- элемент `[0](source)` — процесс-отправитель
+- элемент `[1](dest)` — процесс-получатель
+- элемент `[2](data_size)` — количество элементов для генерации и передачи между процессами
 
 **Выходные данные (`OutType`):**
-- `data` (вектор целых чисел) — полученные данные для `dest`, исходные данные для `source`, пустой вектор для остальных процессов
-- `process_id` (целое число) — ранг процесса-получателя
-- `exec` (логическое значение) — флаг требования проверки выполнения (не проверяется работа топологии для SEQ-версии)
+- `data` (целое число) — сумма элементов вектора, доставленного в процесс-получатель
 
 **Ограничения:**
 - Количество процессов `world_size` может не быть степенью двойки
@@ -69,8 +67,8 @@ for (int dim = 0; dim < dimensions; dim++) {
 **Роли процессов:**
 - **Источник (`source`)**: генерирует вектор данных заданного размера (элементы `1`) и начинает передачу по вычисленному пути
 - **Промежуточные узлы  (процессы на пути, исключая `source` и `dest`)**: получают данные, пересылают следующему узлу
-- **Получатель (`dest`)**: принимает финальные данные
-- **Остальные процессы**: примут данные, когда они будут у процесса-получателя
+- **Получатель (`dest`)**: принимает финальные данные, обрабатывает их, рассылает результат обработки всем процессам
+- **Остальные процессы**: примут данные обработанные финальные данные, когда они будут у процесса-получателя
 
 **Коммуникация:**
 - Каждый процесс независимо вычисляет кратчайший путь от `source` к `dest`, используя только их ранги и общее количество процессов
@@ -136,7 +134,7 @@ kolotukhin_a_hypercube
 - Передача пустого массива (0 -> 3)
 - Передача в обратном направлении (3 -> 0)
 
-Во всех тестах проверялось, что процесс-получатель получил исходные данные — размер и элементы.
+Во всех тестах проверялось, что все процессы получили обработанные исходные данные от процесса-получателя — сумму элементов.
 
 ### 7.2 Производительность
 Результаты performance-тестов (режим `task_run`) для MPI-версии:
@@ -172,39 +170,32 @@ kolotukhin_a_hypercube
 ## Приложение
 ```cpp
 bool KolotukhinAHypercubeMPI::RunImpl() {
-  int rank = -1;
+  int rank = 0;
   int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
   const auto &input = GetInput();
-  int source = input.source;
-  int dest = input.dest;
-  if (dest == -2) {
-    dest = world_size - 1;
-  }
+  int source = input[0];
+  int dest = input[1];
+
   std::vector<int> data{};
-  std::uint64_t data_size = 0;
+  int data_size = 0;
 
   int dimensions = 0;
   dimensions = CalculateHypercubeDimension(world_size);
   if (rank == source) {
-    data_size = static_cast<std::uint64_t>(GetInput().data_size);
-    data.resize(data_size);
-    for (size_t i = 0; i < data_size; i++) {
-      data[i] = 1;
-    }
+    data_size = input[2];
+    data.resize(static_cast<size_t>(data_size), 1);
   }
 
   if (source == dest) {
-    GetOutput().process_id = rank;
-    GetOutput().exec = exec_;
-    MPI_Bcast(&data_size, 1, MPI_UINT64_T, dest, MPI_COMM_WORLD);
+    MPI_Bcast(&data_size, 1, MPI_INT, dest, MPI_COMM_WORLD);
     if (rank != dest) {
-      data.resize(data_size);
+      data.resize(static_cast<size_t>(data_size));
     }
-    MPI_Bcast(data.data(), static_cast<int>(data_size), MPI_INT, dest, MPI_COMM_WORLD);
-    GetOutput().data = data;
+    MPI_Bcast(data.data(), data_size, MPI_INT, dest, MPI_COMM_WORLD);
+    GetOutput() = std::accumulate(data.begin(), data.end(), 0);
     return true;
   }
 
@@ -214,30 +205,31 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   int prev_neighbor = -1;
   int next_neighbor = -1;
   CalcPositions(rank, path, my_position, next_neighbor, prev_neighbor);
-
-  if (rank == source) {
-    PerformComputeLoad(150000);
-    SendData(data, next_neighbor);
-  } else if (rank == dest) {
-    RecvData(data, prev_neighbor);
-    data_size = data.size();
-    PerformComputeLoad(150000);
-  } else {
-    RecvData(data, prev_neighbor);
-    PerformComputeLoad(150000);
-    SendData(data, next_neighbor);
+  if (my_position != -1) {
+    if (rank == source) {
+      PerformComputeLoad(150000);
+      SendData(data, next_neighbor);
+    } else if (rank == dest) {
+      RecvData(data, prev_neighbor);
+      data_size = static_cast<int>(data.size());
+      PerformComputeLoad(150000);
+    } else {
+      RecvData(data, prev_neighbor);
+      data_size = static_cast<int>(data.size());
+      PerformComputeLoad(150000);
+      SendData(data, next_neighbor);
+    }
   }
 
-  MPI_Bcast(&data_size, 1, MPI_UINT64_T, dest, MPI_COMM_WORLD);
+  MPI_Bcast(&data_size, 1, MPI_INT, dest, MPI_COMM_WORLD);
+
   if (my_position == -1) {
-    data.resize(data_size);
+    data.resize(static_cast<size_t>(data_size));
   }
 
-  MPI_Bcast(data.data(), static_cast<int>(data_size), MPI_INT, dest, MPI_COMM_WORLD);
+  MPI_Bcast(data.data(), data_size, MPI_INT, dest, MPI_COMM_WORLD);
 
-  GetOutput().data = data;
-  GetOutput().process_id = rank;
-  GetOutput().exec = exec_;
+  GetOutput() = std::accumulate(data.begin(), data.end(), 0);
   MPI_Barrier(MPI_COMM_WORLD);
   return true;
 }
