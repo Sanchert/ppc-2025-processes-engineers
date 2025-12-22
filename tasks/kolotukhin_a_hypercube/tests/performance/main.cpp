@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
-
-#include <cstddef>
+#include <mpi.h>
 
 #include "kolotukhin_a_hypercube/common/include/common.hpp"
 #include "kolotukhin_a_hypercube/mpi/include/ops_mpi.hpp"
@@ -13,9 +12,11 @@ class KolotukhinAHypercubePerfTests : public ppc::util::BaseRunPerfTests<InType,
   int kDataSize_ = 400;
   InType input_data_{0, 0, 0};
   void SetUp() override {
+    int world_size = 0;
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     input_data_.source = 0;
     input_data_.data_size = kDataSize_;
-    input_data_.dest = -2;
+    input_data_.dest = world_size - 1;
   }
 
   bool CheckTestOutputData(OutType &output_data) final {

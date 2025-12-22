@@ -3,6 +3,8 @@
 #include <mpi.h>
 
 #include <cstddef>
+#include <numeric>
+#include <utility>
 #include <vector>
 
 #include "kolotukhin_a_hypercube/common/include/common.hpp"
@@ -47,7 +49,7 @@ void KolotukhinAHypercubeMPI::SendData(std::vector<int> &data, int next_neighbor
   int data_size = static_cast<int>(data.size());
   MPI_Send(&data_size, 1, MPI_INT, next_neighbor, 0, MPI_COMM_WORLD);
   if (data_size > 0) {
-    MPI_Send(data.data(), static_cast<int>(data_size), MPI_INT, next_neighbor, 1, MPI_COMM_WORLD);
+    MPI_Send(data.data(), data_size, MPI_INT, next_neighbor, 1, MPI_COMM_WORLD);
   }
 }
 
@@ -61,13 +63,13 @@ void KolotukhinAHypercubeMPI::RecvData(std::vector<int> &data, int prev_neighbor
 }
 
 void KolotukhinAHypercubeMPI::CalcPositions(int my_rank, std::vector<int> &path, int &my_pos, int &next, int &prev) {
-  for (int i = 0; i < static_cast<int>(path.size()); i++) {
+  for (int i = 0; std::cmp_less(i, static_cast<int>(path.size())); i++) {
     if (my_rank == path[i]) {
       my_pos = i;
       if (i > 0) {
         prev = path[i - 1];
       }
-      if (i < static_cast<int>(path.size()) - 1) {
+      if (std::cmp_less(i, static_cast<int>(path.size() - 1))) {
         next = path[i + 1];
       }
       break;
@@ -110,7 +112,7 @@ bool KolotukhinAHypercubeMPI::PreProcessingImpl() {
 }
 
 bool KolotukhinAHypercubeMPI::RunImpl() {
-  int rank = -1;
+  int rank = 0;
   int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
@@ -118,9 +120,7 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
   const auto &input = GetInput();
   int source = input.source;
   int dest = input.dest;
-  if (dest == -2) {
-    dest = world_size - 1;
-  }
+
   std::vector<int> data{};
   int data_size = 0;
 
@@ -153,11 +153,11 @@ bool KolotukhinAHypercubeMPI::RunImpl() {
       SendData(data, next_neighbor);
     } else if (rank == dest) {
       RecvData(data, prev_neighbor);
-      data_size = data.size();
+      data_size = static_cast<int>(data.size());
       PerformComputeLoad(150000);
     } else {
       RecvData(data, prev_neighbor);
-      data_size = data.size();
+      data_size = static_cast<int>(data.size());
       PerformComputeLoad(150000);
       SendData(data, next_neighbor);
     }

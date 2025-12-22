@@ -165,6 +165,7 @@ class OlesnitskiyVDijkstraCrsFuncTests : public ppc::util::BaseRunFuncTests<InTy
   }
 
   void CreateStarGraph(int n) {
+    if (n < 1) return;
     std::vector<int> offsets(n + 1, 0);
     std::vector<int> edges;
     std::vector<int> weights;
