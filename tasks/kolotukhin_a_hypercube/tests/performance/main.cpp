@@ -10,7 +10,7 @@ namespace kolotukhin_a_hypercube {
 
 class KolotukhinAHypercubePerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
   int kDataSize_ = 400;
-  InType input_data_{};
+  InType input_data_;
   void SetUp() override {
     int world_size = 0;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);

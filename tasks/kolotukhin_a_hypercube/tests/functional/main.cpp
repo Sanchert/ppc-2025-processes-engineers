@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <string>
 #include <tuple>
+#include <vector>
 
 #include "kolotukhin_a_hypercube/common/include/common.hpp"
 #include "kolotukhin_a_hypercube/mpi/include/ops_mpi.hpp"
@@ -39,7 +40,7 @@ class KolotukhinAHypercubeFuncTests : public ppc::util::BaseRunFuncTests<InType,
   }
 
  private:
-  InType input_data_{};
+  InType input_data_;
 };
 
 namespace {
