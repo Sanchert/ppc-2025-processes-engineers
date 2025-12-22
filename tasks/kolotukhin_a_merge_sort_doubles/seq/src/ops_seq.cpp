@@ -1,6 +1,5 @@
 #include "kolotukhin_a_merge_sort_doubles/seq/include/ops_seq.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -72,7 +71,11 @@ void RadixSortUint64(std::vector<std::uint64_t> &keys) {
       count[digit] = pos + 1;
     }
 
-    std::ranges::copy(temp, keys.begin());
+    if (!temp.empty()) {
+      for (std::size_t i = 0; i < data_size; ++i) {
+        keys[i] = temp[i];
+      }
+    }
   }
 }
 
