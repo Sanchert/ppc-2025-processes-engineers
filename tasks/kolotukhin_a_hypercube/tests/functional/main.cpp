@@ -49,7 +49,7 @@ TEST_P(KolotukhinAHypercubeFuncTests, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 56> kTestParam = {std::make_tuple(std::vector<int>{0, 3, 4}, "far"),
+const std::array<TestType, 7> kTestParam = {std::make_tuple(std::vector<int>{0, 3, 4}, "far"),
                                              std::make_tuple(std::vector<int>{0, 3, 0}, "far_empty"),
                                              std::make_tuple(std::vector<int>{0, 1, 4}, "neighboors"),
                                              std::make_tuple(std::vector<int>{2, 3, 4}, "zero_not_source"),
