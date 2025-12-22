@@ -141,16 +141,8 @@ bool KolotukhinAMergeSortDoublesMPI::RunImpl() {
 
   std::vector<double> local_data(local_size);
 
-  if (rank == 0) {
-    std::copy(input.begin(), input.begin() + local_size, local_data.begin());
-    for (int i = 1; i < size; ++i) {
-      if (recv_counts[i] > 0) {
-        MPI_Send(input.data() + displs[i], recv_counts[i], MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
-      }
-    }
-  } else if (local_size > 0) {
-    MPI_Recv(local_data.data(), local_size, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-  }
+  MPI_Scatterv(rank == 0 ? input.data() : nullptr, recv_counts.data(), displs.data(), MPI_DOUBLE,
+    local_data.data(), local_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
   RadixSortDoubles(local_data);
 
