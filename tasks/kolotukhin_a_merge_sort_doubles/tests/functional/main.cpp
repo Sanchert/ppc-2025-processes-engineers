@@ -1,7 +1,10 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
+#include <cstring>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -10,6 +13,7 @@
 #include "kolotukhin_a_merge_sort_doubles/mpi/include/ops_mpi.hpp"
 #include "kolotukhin_a_merge_sort_doubles/seq/include/ops_seq.hpp"
 #include "util/include/func_test_util.hpp"
+#include "util/include/util.hpp"
 
 namespace kolotukhin_a_merge_sort_doubles {
 
@@ -45,8 +49,8 @@ class KolotukhinAMergeSortDoublesFuncTests : public ppc::util::BaseRunFuncTests<
   }
 
  private:
-  InType input_data_{};
-  std::vector<double> expected_output_{};
+  InType input_data_;
+  std::vector<double> expected_output_;
 };
 
 namespace {

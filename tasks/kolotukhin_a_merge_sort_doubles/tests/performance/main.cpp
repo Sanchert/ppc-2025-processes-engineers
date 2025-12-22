@@ -14,7 +14,7 @@ class KolotukhinAMergeSortDoublesPerfTests : public ppc::util::BaseRunPerfTests<
   void SetUp() override {
     test_data_.resize(kCount_);
     for (std::size_t i = 0; i < kCount_; ++i) {
-      double value = static_cast<double>(kCount_ - i);
+      auto value = static_cast<double>(kCount_ - i);
       if (i % 3 == 0) {
         value = -value;
       }
