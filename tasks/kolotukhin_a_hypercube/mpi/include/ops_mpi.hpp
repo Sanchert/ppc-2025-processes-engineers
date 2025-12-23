@@ -27,6 +27,8 @@ class KolotukhinAHypercubeMPI : public BaseTask {
   static void RecvData(std::vector<int> &data, int prev_neighbor);
   static void CalcPositions(int my_rank, std::vector<int> &path, int &my_pos, int &next, int &prev);
   static std::vector<int> CalcPath(int source, int dest, int dimensions);
+  static std::vector<int> CalcPathLowToHigh(int source, int dest, int dimensions, int xor_val);
+  static std::vector<int> CalcPathHighToLow(int source, int dest, int dimensions, int xor_val);
 };
 
 }  // namespace kolotukhin_a_hypercube

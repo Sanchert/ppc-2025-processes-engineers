@@ -77,38 +77,46 @@ void KolotukhinAHypercubeMPI::CalcPositions(int my_rank, std::vector<int> &path,
   }
 }
 
-std::vector<int> KolotukhinAHypercubeMPI::CalcPath(int source, int dest, int dimensions) {
+std::vector<int> KolotukhinAHypercubeMPI::CalcPathLowToHigh(int source, int dest, int dimensions, int xor_val) {
   std::vector<int> path;
   int current = source;
   path.push_back(current);
-  int xor_val = source ^ dest;
-
-  // Если source > dest, начинаем со старших битов, иначе - с младших
-  if (source > dest) {
-    for (int dim = dimensions - 1; dim >= 0; dim--) {
-      int mask = 1 << dim;
-      if ((xor_val & mask) != 0) {
-        current = current ^ mask;
-        path.push_back(current);
-        if (current == dest) {
-          break;
-        }
-      }
-    }
-  } else {
-    for (int dim = 0; dim < dimensions; dim++) {
-      int mask = 1 << dim;
-      if ((xor_val & mask) != 0) {
-        current = current ^ mask;
-        path.push_back(current);
-        if (current == dest) {
-          break;
-        }
+  for (int dim = 0; dim < dimensions; dim++) {
+    int mask = 1 << dim;
+    if ((xor_val & mask) != 0) {
+      current = current ^ mask;
+      path.push_back(current);
+      if (current == dest) {
+        break;
       }
     }
   }
-
   return path;
+}
+
+std::vector<int> KolotukhinAHypercubeMPI::CalcPathHighToLow(int source, int dest, int dimensions, int xor_val) {
+  std::vector<int> path;
+  int current = source;
+  path.push_back(current);
+  for (int dim = dimensions - 1; dim >= 0; dim--) {
+    int mask = 1 << dim;
+    if ((xor_val & mask) != 0) {
+      current = current ^ mask;
+      path.push_back(current);
+      if (current == dest) {
+        break;
+      }
+    }
+  }
+  return path;
+}
+
+std::vector<int> KolotukhinAHypercubeMPI::CalcPath(int source, int dest, int dimensions) {
+  int xor_val = source ^ dest;
+  if (source > dest) {
+    return CalcPathHighToLow(source, dest, dimensions, xor_val);
+  }
+  return CalcPathLowToHigh(source, dest, dimensions, xor_val);
 }
 
 bool KolotukhinAHypercubeMPI::ValidationImpl() {
