@@ -32,7 +32,7 @@ std::vector<std::uint64_t> ConvertDoublesToKeys(const std::vector<double> &data)
 
 void ConvertKeysToDoubles(const std::vector<std::uint64_t> &keys, std::vector<double> &data) {
   const std::size_t data_size = data.size();
-  for (std::size_t i = 0; i < data_size; ++i) {
+  for (std::size_t i = 0; i < data_size; i++) {
     std::uint64_t u = keys[i];
     if ((u & 0x8000000000000000ULL) != 0U) {
       u &= ~0x8000000000000000ULL;
@@ -60,11 +60,11 @@ void RadixSortUint64(std::vector<std::uint64_t> &keys) {
       ++count[digit + 1];
     }
 
-    for (int i = 0; i < radix_size; ++i) {
+    for (int i = 0; i < radix_size; i++) {
       count[i + 1] += count[i];
     }
 
-    for (std::size_t i = 0; i < data_size; ++i) {
+    for (std::size_t i = 0; i < data_size; i++) {
       const auto digit = static_cast<std::uint8_t>((keys[i] >> shift) & 0xFF);
       const std::size_t pos = count[digit];
       temp[pos] = keys[i];
@@ -72,7 +72,7 @@ void RadixSortUint64(std::vector<std::uint64_t> &keys) {
     }
 
     if (!temp.empty()) {
-      for (std::size_t i = 0; i < data_size; ++i) {
+      for (std::size_t i = 0; i < data_size; i++) {
         keys[i] = temp[i];
       }
     }
@@ -122,7 +122,7 @@ bool KolotukhinAMergeSortDoublesSEQ::RunImpl() {
   std::vector<double> data = input;
   RadixSortDoubles(data);
 
-  std::get<0>(GetOutput()) = data;
+  std::get<0>(GetOutput()) = std::move(data);
   std::get<1>(GetOutput()) = 0;
   return true;
 }
